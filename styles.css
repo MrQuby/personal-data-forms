@@ -77,6 +77,15 @@ body {
     font-weight: 600;
 }
 
+.form-section .subsection-title {
+    font-size: 1.1em;
+    color: #333;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+    grid-column: 1 / -1;
+}
+
 /* Form Group Styles */
 .form-group {
     margin-bottom: 1.5rem;
@@ -90,12 +99,36 @@ body {
     grid-column: span 3;
 }
 
+.form-group.full-width {
+    grid-column: 1 / -1;
+    margin-top: 20px;
+}
+
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    color: var(--label-color);
+    color: #333;
     font-weight: 500;
-    font-size: 0.95rem;
+}
+
+/* Add red asterisk for required fields */
+.form-group:has(input[required]) > label::after,
+.form-group:has(select[required]) > label::after {
+    content: " *";
+    color: #ff0000;
+    font-weight: bold;
+}
+
+/* Special case for radio groups */
+.form-group:has(.radio-group input[required]) > label::after {
+    content: " *";
+    color: #ff0000;
+    font-weight: bold;
+}
+
+/* Don't show asterisk on radio option labels */
+.radio-item label::after {
+    content: none !important;
 }
 
 /* Input Group Styles */
