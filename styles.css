@@ -317,6 +317,86 @@ input[type="date"].form-control {
     padding-left: 2.3rem;
 }
 
+/* Form Submission Result Styles */
+.result-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    text-align: center;
+    border-left: 5px solid #28a745;
+}
+
+.success-message h2 {
+    margin: 0 0 0.5rem 0;
+    color: #0f4c1c;
+}
+
+.result-item {
+    margin: 1.2rem 0;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #f8f9fa;
+    border-left: 4px solid #4a90e2;
+    transition: all 0.3s ease;
+}
+
+.result-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.result-label {
+    font-weight: 600;
+    color: #2c3e50;
+    min-width: 150px;
+    display: inline-block;
+}
+
+.section-title {
+    color: #2c3e50;
+    margin: 2rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #4a90e2;
+}
+
+.icon-container {
+    display: inline-block;
+    width: 30px;
+    color: #4a90e2;
+}
+
+/* Responsive styles for form submission result */
+@media (max-width: 768px) {
+    .result-container {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .result-label {
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Background style for result page */
+body.result-page {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 2rem;
+}
+
 /* Responsive Styles */
 @media (max-width: 992px) {
     .form-grid {
@@ -335,5 +415,43 @@ input[type="date"].form-control {
     
     body {
         padding: 1rem;
+    }
+}
+
+/* Button styles for result page */
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-back {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #4a90e2;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-back:hover {
+    background: #357abd;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+}
+
+.btn-back i {
+    margin-right: 8px;
+}
+
+/* Print styles */
+@media print {
+    .button-group {
+        display: none;
     }
 }
