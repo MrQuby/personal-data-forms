@@ -255,8 +255,9 @@ function calculate_age($date_of_birth) {
                         <label for="pob_street">Street Name</label>
                         <div class="input-group">
                             <i class="fas fa-road"></i>
-                            <input type="text" class="form-control" id="pob_street" name="pob_street" value="<?php echo get_form_value('pob_street'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['pob_street']) ? 'input-error' : ''; ?>" id="pob_street" name="pob_street" required value="<?php echo get_form_value('pob_street'); ?>">
                         </div>
+                        <?php display_error('pob_street'); ?>
                     </div>
 
                     <div class="form-group">
@@ -271,7 +272,7 @@ function calculate_age($date_of_birth) {
                         <label for="pob_barangay">Barangay/District/Locality</label>
                         <div class="input-group">
                             <i class="fas fa-map-marker-alt"></i>
-                            <input type="text" class="form-control" id="pob_barangay" name="pob_barangay" required value="<?php echo get_form_value('pob_barangay'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['pob_barangay']) ? 'input-error' : ''; ?>" id="pob_barangay" name="pob_barangay" required value="<?php echo get_form_value('pob_barangay'); ?>">
                         </div>
                         <?php display_error('pob_barangay'); ?>
                     </div>
@@ -280,7 +281,7 @@ function calculate_age($date_of_birth) {
                         <label for="pob_city">City/Municipality</label>
                         <div class="input-group">
                             <i class="fas fa-city"></i>
-                            <input type="text" class="form-control" id="pob_city" name="pob_city" required value="<?php echo get_form_value('pob_city'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['pob_city']) ? 'input-error' : ''; ?>" id="pob_city" name="pob_city" required value="<?php echo get_form_value('pob_city'); ?>">
                         </div>
                         <?php display_error('pob_city'); ?>
                     </div>
@@ -289,7 +290,7 @@ function calculate_age($date_of_birth) {
                         <label for="pob_province">Province</label>
                         <div class="input-group">
                             <i class="fas fa-map"></i>
-                            <input type="text" class="form-control" id="pob_province" name="pob_province" required value="<?php echo get_form_value('pob_province'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['pob_province']) ? 'input-error' : ''; ?>" id="pob_province" name="pob_province" required value="<?php echo get_form_value('pob_province'); ?>">
                         </div>
                         <?php display_error('pob_province'); ?>
                     </div>
@@ -298,7 +299,7 @@ function calculate_age($date_of_birth) {
                         <label for="pob_country">Country</label>
                         <div class="input-group">
                             <i class="fas fa-globe"></i>
-                            <select class="form-control" id="pob_country" name="pob_country" required>
+                            <select class="form-control <?php echo isset($errors['pob_country']) ? 'input-error' : ''; ?>" id="pob_country" name="pob_country" required>
                                 <option value="">Select Country</option>
                                 <?php
                                 foreach($countries as $country) {
@@ -314,7 +315,7 @@ function calculate_age($date_of_birth) {
                         <label for="pob_zip_code">Zip Code</label>
                         <div class="input-group">
                             <i class="fas fa-mail-bulk"></i>
-                            <input type="text" class="form-control" id="pob_zip_code" name="pob_zip_code" required pattern="[0-9]+" value="<?php echo get_form_value('pob_zip_code'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['pob_zip_code']) ? 'input-error' : ''; ?>" id="pob_zip_code" name="pob_zip_code" required pattern="[0-9]+" value="<?php echo get_form_value('pob_zip_code'); ?>">
                         </div>
                         <?php display_error('pob_zip_code'); ?>
                     </div>
@@ -329,7 +330,7 @@ function calculate_age($date_of_birth) {
                         <label for="unit_no">RM/FLR/Unit No. & Bldg. Name</label>
                         <div class="input-group">
                             <i class="fas fa-building"></i>
-                            <input type="text" class="form-control" id="unit_no" name="unit_no" required value="<?php echo get_form_value('unit_no'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['unit_no']) ? 'input-error' : ''; ?>" id="unit_no" name="unit_no" required value="<?php echo get_form_value('unit_no'); ?>">
                         </div>
                         <?php display_error('unit_no'); ?>
                     </div>
@@ -338,7 +339,7 @@ function calculate_age($date_of_birth) {
                         <label for="house_no">House/Lot & Blk. No</label>
                         <div class="input-group">
                             <i class="fas fa-home"></i>
-                            <input type="text" class="form-control" id="house_no" name="house_no" required value="<?php echo get_form_value('house_no'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['house_no']) ? 'input-error' : ''; ?>" id="house_no" name="house_no" required value="<?php echo get_form_value('house_no'); ?>">
                         </div>
                         <?php display_error('house_no'); ?>
                     </div>
@@ -347,7 +348,7 @@ function calculate_age($date_of_birth) {
                         <label for="street">Street Name</label>
                         <div class="input-group">
                             <i class="fas fa-road"></i>
-                            <input type="text" class="form-control" id="street" name="street" required value="<?php echo get_form_value('street'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['street']) ? 'input-error' : ''; ?>" id="street" name="street" required value="<?php echo get_form_value('street'); ?>">
                         </div>
                         <?php display_error('street'); ?>
                     </div>
@@ -364,7 +365,7 @@ function calculate_age($date_of_birth) {
                         <label for="barangay">Barangay/District/Locality</label>
                         <div class="input-group">
                             <i class="fas fa-map-marker-alt"></i>
-                            <input type="text" class="form-control" id="barangay" name="barangay" required value="<?php echo get_form_value('barangay'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['barangay']) ? 'input-error' : ''; ?>" id="barangay" name="barangay" required value="<?php echo get_form_value('barangay'); ?>">
                         </div>
                         <?php display_error('barangay'); ?>
                     </div>
@@ -373,7 +374,7 @@ function calculate_age($date_of_birth) {
                         <label for="city">City/Municipality</label>
                         <div class="input-group">
                             <i class="fas fa-city"></i>
-                            <input type="text" class="form-control" id="city" name="city" required value="<?php echo get_form_value('city'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['city']) ? 'input-error' : ''; ?>" id="city" name="city" required value="<?php echo get_form_value('city'); ?>">
                         </div>
                         <?php display_error('city'); ?>
                     </div>
@@ -382,7 +383,7 @@ function calculate_age($date_of_birth) {
                         <label for="province">Province</label>
                         <div class="input-group">
                             <i class="fas fa-map"></i>
-                            <input type="text" class="form-control" id="province" name="province" required value="<?php echo get_form_value('province'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['province']) ? 'input-error' : ''; ?>" id="province" name="province" required value="<?php echo get_form_value('province'); ?>">
                         </div>
                         <?php display_error('province'); ?>
                     </div>
@@ -391,7 +392,7 @@ function calculate_age($date_of_birth) {
                         <label for="country">Country</label>
                         <div class="input-group">
                             <i class="fas fa-globe"></i>
-                            <select class="form-control" id="country" name="country" required>
+                            <select class="form-control <?php echo isset($errors['country']) ? 'input-error' : ''; ?>" id="country" name="country" required>
                                 <option value="">Select Country</option>
                                 <?php
                                 foreach($countries as $country) {
@@ -407,7 +408,7 @@ function calculate_age($date_of_birth) {
                         <label for="zip_code">Zip Code</label>
                         <div class="input-group">
                             <i class="fas fa-mail-bulk"></i>
-                            <input type="text" class="form-control" id="zip_code" name="zip_code" required pattern="[0-9]+" value="<?php echo get_form_value('zip_code'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['zip_code']) ? 'input-error' : ''; ?>" id="zip_code" name="zip_code" required pattern="[0-9]+" value="<?php echo get_form_value('zip_code'); ?>">
                         </div>
                         <?php display_error('zip_code'); ?>
                     </div>

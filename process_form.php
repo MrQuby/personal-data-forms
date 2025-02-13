@@ -71,7 +71,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'civil_status' => 'Civil Status',
         'nationality' => 'Nationality',
         'email' => 'Email',
-        'mobile_number' => 'Mobile Number'
+        'mobile_number' => 'Mobile Number',
+        // Add required place of birth fields
+        'pob_street' => 'Place of Birth Street',
+        'pob_barangay' => 'Place of Birth Barangay/District/Locality',
+        'pob_city' => 'Place of Birth City/Municipality',
+        'pob_province' => 'Place of Birth Province',
+        'pob_country' => 'Place of Birth Country',
+        'pob_zip_code' => 'Place of Birth Zip Code',
+        // Add required home address fields
+        'unit_no' => 'Home Address Unit No.',
+        'house_no' => 'Home Address House/Lot & Blk. No.',
+        'street' => 'Home Address Street',
+        'barangay' => 'Home Address Barangay/District/Locality',
+        'city' => 'Home Address City/Municipality',
+        'province' => 'Home Address Province',
+        'country' => 'Home Address Country',
+        'zip_code' => 'Home Address Zip Code'
     ];
 
     // Check required fields
@@ -156,20 +172,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // Validate address fields
-    $address_fields = [
-        'barangay' => 'Barangay',
-        'city' => 'City',
-        'province' => 'Province',
-        'country' => 'Country'
-    ];
-
-    foreach ($address_fields as $field => $label) {
-        if (is_empty_or_spaces($_POST[$field] ?? '')) {
-            $errors[$field] = "$label is required and cannot be empty.";
-        }
-    }
-
     // If there are errors, store them in session and redirect back
     if (!empty($errors)) {
         $_SESSION['errors'] = $errors;
@@ -208,9 +210,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $pob_province = sanitize_input($_POST['pob_province'] ?? '');
     $pob_country = sanitize_input($_POST['pob_country'] ?? '');
     $pob_zip_code = sanitize_input($_POST['pob_zip_code'] ?? '');
+    $pob_street = sanitize_input($_POST['pob_street'] ?? '');
     
     // Combine place of birth components
     $place_of_birth = implode(', ', array_filter([
+        $pob_street,
         $pob_barangay,
         $pob_city,
         $pob_province,
