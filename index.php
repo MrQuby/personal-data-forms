@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 $countries = array(
     "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
     "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain",
@@ -32,669 +34,70 @@ $countries = array(
     "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen",
     "Zambia", "Zimbabwe"
 );
+
+// Function to display error message
+function display_error($field) {
+    global $errors;
+    if (isset($errors[$field])) {
+        echo '<div class="error-message">' . htmlspecialchars($errors[$field]) . '</div>';
+    }
+}
+
+// Get errors from session if they exist
+$errors = $_SESSION['errors'] ?? [];
+$form_data = $_SESSION['form_data'] ?? [];
+
+// Clear session data
+unset($_SESSION['errors']);
+unset($_SESSION['form_data']);
+
+// Function to get form value
+function get_form_value($field) {
+    global $form_data;
+    return htmlspecialchars($form_data[$field] ?? '');
+}
+
+// Function to calculate and display age
+function calculate_age($date_of_birth) {
+    if (empty($date_of_birth)) return '';
+    $dob = new DateTime($date_of_birth);
+    $today = new DateTime('2025-02-13'); // Using provided current time
+    $age = $today->diff($dob)->y;
+    return $age;
+}
 ?>
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Information Form</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
-    <script>
-        function validateName(input) {
-            const value = input.value.trim();
-            const errorElement = document.getElementById(input.id + '_error');
-            
-            // Check for empty or spaces-only input
-            if (!value) {
-                input.style.borderColor = 'red';
-                if (errorElement) {
-                    errorElement.textContent = 'This field is required';
-                    errorElement.style.display = 'block';
-                    errorElement.style.color = 'red';
-                }
-                return false;
-            }
-            
-            // Check for valid characters (letters, spaces, and hyphens only)
-            if (!/^[A-Za-z\s-]+$/.test(value)) {
-                input.style.borderColor = 'red';
-                if (errorElement) {
-                    errorElement.textContent = 'Please enter only letters, spaces, or hyphens';
-                    errorElement.style.display = 'block';
-                    errorElement.style.color = 'red';
-                }
-                return false;
-            }
-            
-            // If validation passes, clear the error state
-            input.style.borderColor = '';
-            if (errorElement) {
-                errorElement.textContent = '';
-                errorElement.style.display = 'none';
-            }
-            return true;
+    <style>
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: block;
         }
-
-        function calculateAge() {
-            const dobInput = document.getElementById('date_of_birth');
-            const dob = new Date(dobInput.value);
-            const today = new Date();
-            
-            let age = today.getFullYear() - dob.getFullYear();
-            const monthDiff = today.getMonth() - dob.getMonth();
-            
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-                age--;
-            }
-            
-            const ageDisplay = document.getElementById('age_display');
-            if (age < 0) {
-                ageDisplay.textContent = 'Invalid date of birth';
-                ageDisplay.style.color = 'red';
-                dobInput.setCustomValidity('Please enter a valid date of birth');
-            } else {
-                ageDisplay.textContent = `Age: ${age} years old`;
-                ageDisplay.style.color = '#666';
-                dobInput.setCustomValidity('');
-            }
-            
-            // Store age in hidden field for form submission
-            document.getElementById('calculated_age').value = age;
-            updateProgress();
+        .form-group {
+            margin-bottom: 1rem;
         }
-
-        function handleCivilStatus() {
-            const civilStatus = document.getElementById('civil_status');
-            const othersContainer = document.getElementById('others_container');
-            
-            if (civilStatus.value === 'others') {
-                othersContainer.style.display = 'block';
-                document.getElementById('others_specify').required = true;
-            } else {
-                othersContainer.style.display = 'none';
-                document.getElementById('others_specify').required = false;
-            }
-            updateProgress();
+        .input-error {
+            border-color: #dc3545 !important;
         }
-
-        function updateProgress() {
-            const form = document.getElementById('personalDataForm');
-            const requiredFields = form.querySelectorAll('[required]');
-            const totalFields = requiredFields.length;
-            let filledFields = 0;
-            
-            requiredFields.forEach(field => {
-                if (field.type === 'radio') {
-                    if (document.querySelector(`input[name="${field.name}"]:checked`)) {
-                        filledFields++;
-                    }
-                } else if (field.value.trim() !== '') {
-                    filledFields++;
-                }
-            });
-            
-            const progress = Math.round((filledFields / totalFields) * 100);
-            document.getElementById('progressText').textContent = `${progress}%`;
-            document.getElementById('formProgress').style.width = `${progress}%`;
+        .requirements {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
         }
-
-        // Add event listeners when document loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Calculate initial age if date is already set
-            const dobInput = document.getElementById('date_of_birth');
-            if (dobInput.value) {
-                calculateAge();
-            }
-            
-            // Add input event listeners for name fields
-            const nameFields = ['last_name', 'first_name', 'middle_initial'];
-            nameFields.forEach(fieldId => {
-                const input = document.getElementById(fieldId);
-                if (input) {
-                    input.addEventListener('input', function() {
-                        validateName(this);
-                        updateProgress();
-                    });
-                    
-                    input.addEventListener('blur', function() {
-                        validateName(this);
-                    });
-                }
-            });
-            
-            // Add input event listeners for all text fields to prevent spaces-only input
-            document.querySelectorAll('input[type="text"]').forEach(input => {
-                input.addEventListener('input', function() {
-                    if (!this.value.trim() && this.required) {
-                        this.setCustomValidity('This field cannot be empty or contain only spaces');
-                    } else {
-                        this.setCustomValidity('');
-                    }
-                    updateProgress();
-                });
-            });
-        });
-
-        function validateForm() {
-            const form = document.getElementById('personalDataForm');
-            const inputs = form.querySelectorAll('input[required], select[required]');
-            let isValid = true;
-            
-            // Clear all previous errors first
-            document.querySelectorAll('.error-message').forEach(error => {
-                error.textContent = '';
-                error.style.display = 'none';
-            });
-            document.querySelectorAll('input, select').forEach(input => {
-                input.style.borderColor = '';
-            });
-            document.querySelector('.radio-group').classList.remove('error');
-
-            // Validate date of birth specifically
-            const dobInput = document.getElementById('date_of_birth');
-            const dobError = document.getElementById('date_of_birth_error');
-            if (!dobInput.value) {
-                isValid = false;
-                dobInput.style.borderColor = 'red';
-                if (dobError) {
-                    dobError.textContent = 'Please select your date of birth';
-                    dobError.style.display = 'block';
-                    dobError.style.color = 'red';
-                }
-            }
-
-            // Validate civil status specifically
-            const civilStatusInput = document.getElementById('civil_status');
-            const civilStatusError = document.getElementById('civil_status_error');
-            if (!civilStatusInput.value) {
-                isValid = false;
-                civilStatusInput.style.borderColor = 'red';
-                if (civilStatusError) {
-                    civilStatusError.textContent = 'Please select your civil status';
-                    civilStatusError.style.display = 'block';
-                    civilStatusError.style.color = 'red';
-                }
-            }
-
-            // Validate mobile number specifically
-            const mobileInput = document.getElementById('mobile_number');
-            const mobileError = document.getElementById('mobile_number_error');
-            if (!mobileInput.value.trim()) {
-                isValid = false;
-                mobileInput.style.borderColor = 'red';
-                if (mobileError) {
-                    mobileError.textContent = 'Please enter your mobile number';
-                    mobileError.style.display = 'block';
-                    mobileError.style.color = 'red';
-                }
-            } else if (!mobileInput.value.match(/^\+?[\d\s-]{10,}$/)) {
-                isValid = false;
-                mobileInput.style.borderColor = 'red';
-                if (mobileError) {
-                    mobileError.textContent = 'Please enter a valid mobile number';
-                    mobileError.style.display = 'block';
-                    mobileError.style.color = 'red';
-                }
-            }
-
-            // Validate sex radio buttons specifically
-            const sexRadioGroup = document.querySelector('.radio-group');
-            const sexError = document.getElementById('sex_error');
-            const sexSelected = form.querySelector('input[name="sex"]:checked');
-            
-            if (!sexSelected) {
-                isValid = false;
-                sexRadioGroup.classList.add('error');
-                if (sexError) {
-                    sexError.textContent = 'Please select your sex';
-                    sexError.style.display = 'block';
-                    sexError.style.color = 'red';
-                }
-            }
-
-            // Validate place of birth fields
-            const pobFields = ['pob_barangay', 'pob_city', 'pob_province', 'pob_country', 'pob_zip_code'];
-            pobFields.forEach(fieldId => {
-                const input = document.getElementById(fieldId);
-                const errorElement = document.getElementById(fieldId + '_error');
-                if (input && input.required && !input.value.trim()) {
-                    isValid = false;
-                    input.style.borderColor = 'red';
-                    if (errorElement) {
-                        errorElement.textContent = 'This field is required';
-                        errorElement.style.display = 'block';
-                        errorElement.style.color = 'red';
-                    }
-                }
-            });
-
-            // Validate home address fields
-            const addressFields = ['unit_no', 'house_no', 'street', 'barangay', 'city', 'province', 'country', 'zip_code'];
-            addressFields.forEach(fieldId => {
-                const input = document.getElementById(fieldId);
-                const errorElement = document.getElementById(fieldId + '_error');
-                if (input && input.required && !input.value.trim()) {
-                    isValid = false;
-                    input.style.borderColor = 'red';
-                    if (errorElement) {
-                        errorElement.textContent = 'This field is required';
-                        errorElement.style.display = 'block';
-                        errorElement.style.color = 'red';
-                    }
-                }
-            });
-
-            // Validate nationality
-            const nationalityInput = document.getElementById('nationality');
-            const nationalityError = document.getElementById('nationality_error');
-            if (!nationalityInput.value.trim()) {
-                isValid = false;
-                nationalityInput.style.borderColor = 'red';
-                if (nationalityError) {
-                    nationalityError.textContent = 'Please enter your nationality';
-                    nationalityError.style.display = 'block';
-                    nationalityError.style.color = 'red';
-                }
-            } else if (!/^[A-Za-z\s-]+$/.test(nationalityInput.value.trim())) {
-                isValid = false;
-                nationalityInput.style.borderColor = 'red';
-                if (nationalityError) {
-                    nationalityError.textContent = 'Please enter only letters, spaces, or hyphens';
-                    nationalityError.style.display = 'block';
-                    nationalityError.style.color = 'red';
-                }
-            }
-
-            // Validate email address
-            const emailInput = document.getElementById('email');
-            const emailError = document.getElementById('email_error');
-            if (emailInput.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
-                isValid = false;
-                emailInput.style.borderColor = 'red';
-                if (emailError) {
-                    emailError.textContent = 'Please enter a valid email address (e.g., example@domain.com)';
-                    emailError.style.display = 'block';
-                    emailError.style.color = 'red';
-                }
-            }
-
-            // Validate telephone number only if it has a value
-            const telephoneInput = document.getElementById('telephone_number');
-            const telephoneError = document.getElementById('telephone_number_error');
-            if (telephoneInput.value.trim()) {
-                if (!/^\d{7}$/.test(telephoneInput.value.trim())) {
-                    isValid = false;
-                    telephoneInput.style.borderColor = 'red';
-                    if (telephoneError) {
-                        telephoneError.textContent = 'Please enter exactly 7 digits';
-                        telephoneError.style.display = 'block';
-                        telephoneError.style.color = 'red';
-                    }
-                }
-            }
-
-            // Validate all other inputs
-            inputs.forEach(input => {
-                // Skip the fields we already validated specifically
-                if (['date_of_birth', 'civil_status', 'mobile_number', 'sex', 'pob_barangay', 'pob_city', 'pob_province', 'pob_country', 'pob_zip_code', 'unit_no', 'house_no', 'street', 'barangay', 'city', 'province', 'country', 'zip_code', 'nationality', 'email', 'telephone_number'].includes(input.id)) {
-                    return;
-                }
-
-                const errorElement = document.getElementById(input.id + '_error');
-                let errorMessage = '';
-
-                if (input.type === 'radio') {
-                    const radioGroup = form.querySelector(`input[name="${input.name}"]:checked`);
-                    if (!radioGroup) {
-                        isValid = false;
-                        const groupError = document.getElementById(`${input.name}_error`);
-                        if (groupError) {
-                            groupError.textContent = 'Please select an option';
-                            groupError.style.display = 'block';
-                            groupError.style.color = 'red';
-                        }
-                    }
-                } else if (input.type === 'select-one' && !input.value) {
-                    isValid = false;
-                    errorMessage = 'Please select an option';
-                    input.style.borderColor = 'red';
-                } else if (input.type === 'email' && input.value.trim()) {
-                    if (!input.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-                        isValid = false;
-                        errorMessage = 'Please enter a valid email address';
-                        input.style.borderColor = 'red';
-                    }
-                } else if (!input.value.trim()) {
-                    isValid = false;
-                    errorMessage = 'This field is required';
-                    input.style.borderColor = 'red';
-                }
-
-                if (errorMessage && errorElement) {
-                    errorElement.textContent = errorMessage;
-                    errorElement.style.display = 'block';
-                    errorElement.style.color = 'red';
-                }
-            });
-
-            return isValid;
+        #age_display {
+            margin-top: 0.25rem;
+            font-weight: bold;
         }
-
-        // Add event listeners when document loads
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('personalDataForm');
-            
-            // Form submit handler
-            form.addEventListener('submit', function(event) {
-                if (!validateForm()) {
-                    event.preventDefault();
-                    // Scroll to the first error
-                    const firstError = document.querySelector('.error-message[style*="block"]');
-                    if (firstError) {
-                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }
-            });
-
-            // Add specific validation for date of birth, civil status, and mobile number
-            const dobInput = document.getElementById('date_of_birth');
-            const civilStatusInput = document.getElementById('civil_status');
-            const mobileInput = document.getElementById('mobile_number');
-
-            [dobInput, civilStatusInput, mobileInput].forEach(input => {
-                if (!input) return;
-                
-                input.addEventListener('blur', function() {
-                    const errorElement = document.getElementById(this.id + '_error');
-                    if (!this.value.trim()) {
-                        this.style.borderColor = 'red';
-                        if (errorElement) {
-                            errorElement.textContent = this.type === 'date' ? 
-                                'Please select your date of birth' : 
-                                (this.id === 'civil_status' ? 
-                                    'Please select your civil status' : 
-                                    'Please enter your mobile number');
-                            errorElement.style.display = 'block';
-                            errorElement.style.color = 'red';
-                        }
-                    } else {
-                        // Additional validation for mobile number
-                        if (this.id === 'mobile_number' && !this.value.match(/^\+?[\d\s-]{10,}$/)) {
-                            this.style.borderColor = 'red';
-                            if (errorElement) {
-                                errorElement.textContent = 'Please enter a valid mobile number';
-                                errorElement.style.display = 'block';
-                                errorElement.style.color = 'red';
-                            }
-                        } else {
-                            this.style.borderColor = '';
-                            if (errorElement) {
-                                errorElement.textContent = '';
-                                errorElement.style.display = 'none';
-                            }
-                        }
-                    }
-                });
-
-                // Clear error on input
-                input.addEventListener('input', function() {
-                    const errorElement = document.getElementById(this.id + '_error');
-                    if (this.value.trim()) {
-                        this.style.borderColor = '';
-                        if (errorElement) {
-                            errorElement.textContent = '';
-                            errorElement.style.display = 'none';
-                        }
-                    }
-                });
-            });
-
-            // Add event listeners for radio buttons
-            document.querySelectorAll('input[name="sex"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    const radioGroup = this.closest('.radio-group');
-                    const errorElement = document.getElementById('sex_error');
-                    if (radioGroup) {
-                        radioGroup.classList.remove('error');
-                    }
-                    if (errorElement) {
-                        errorElement.textContent = '';
-                        errorElement.style.display = 'none';
-                    }
-                    updateProgress();
-                });
-            });
-
-            // Add validation for place of birth fields
-            const pobFields = ['pob_barangay', 'pob_city', 'pob_province', 'pob_country', 'pob_zip_code'];
-            pobFields.forEach(fieldId => {
-                const input = document.getElementById(fieldId);
-                if (input) {
-                    input.addEventListener('blur', function() {
-                        const errorElement = document.getElementById(this.id + '_error');
-                        if (this.required && !this.value.trim()) {
-                            this.style.borderColor = 'red';
-                            if (errorElement) {
-                                errorElement.textContent = 'This field is required';
-                                errorElement.style.display = 'block';
-                                errorElement.style.color = 'red';
-                            }
-                        } else {
-                            this.style.borderColor = '';
-                            if (errorElement) {
-                                errorElement.textContent = '';
-                                errorElement.style.display = 'none';
-                            }
-                        }
-                    });
-
-                    input.addEventListener('input', function() {
-                        const errorElement = document.getElementById(this.id + '_error');
-                        if (this.value.trim()) {
-                            this.style.borderColor = '';
-                            if (errorElement) {
-                                errorElement.textContent = '';
-                                errorElement.style.display = 'none';
-                            }
-                        }
-                        updateProgress();
-                    });
-                }
-            });
-
-            // Add validation for home address fields
-            const addressFields = ['unit_no', 'house_no', 'street', 'barangay', 'city', 'province', 'country', 'zip_code'];
-            addressFields.forEach(fieldId => {
-                const input = document.getElementById(fieldId);
-                if (input) {
-                    input.addEventListener('blur', function() {
-                        const errorElement = document.getElementById(this.id + '_error');
-                        if (this.required && !this.value.trim()) {
-                            this.style.borderColor = 'red';
-                            if (errorElement) {
-                                errorElement.textContent = 'This field is required';
-                                errorElement.style.display = 'block';
-                                errorElement.style.color = 'red';
-                            }
-                        } else {
-                            this.style.borderColor = '';
-                            if (errorElement) {
-                                errorElement.textContent = '';
-                                errorElement.style.display = 'none';
-                            }
-                        }
-                    });
-
-                    input.addEventListener('input', function() {
-                        const errorElement = document.getElementById(this.id + '_error');
-                        if (this.value.trim()) {
-                            this.style.borderColor = '';
-                            if (errorElement) {
-                                errorElement.textContent = '';
-                                errorElement.style.display = 'none';
-                            }
-                        }
-                        updateProgress();
-                    });
-                }
-            });
-
-            // Add validation for nationality
-            const nationalityInput = document.getElementById('nationality');
-            if (nationalityInput) {
-                nationalityInput.addEventListener('blur', function() {
-                    const errorElement = document.getElementById(this.id + '_error');
-                    if (!this.value.trim()) {
-                        this.style.borderColor = 'red';
-                        if (errorElement) {
-                            errorElement.textContent = 'Please enter your nationality';
-                            errorElement.style.display = 'block';
-                            errorElement.style.color = 'red';
-                        }
-                    } else if (!/^[A-Za-z\s-]+$/.test(this.value.trim())) {
-                        this.style.borderColor = 'red';
-                        if (errorElement) {
-                            errorElement.textContent = 'Please enter only letters, spaces, or hyphens';
-                            errorElement.style.display = 'block';
-                            errorElement.style.color = 'red';
-                        }
-                    } else {
-                        this.style.borderColor = '';
-                        if (errorElement) {
-                            errorElement.textContent = '';
-                            errorElement.style.display = 'none';
-                        }
-                    }
-                });
-
-                nationalityInput.addEventListener('input', function() {
-                    const errorElement = document.getElementById(this.id + '_error');
-                    if (this.value.trim() && /^[A-Za-z\s-]+$/.test(this.value.trim())) {
-                        this.style.borderColor = '';
-                        if (errorElement) {
-                            errorElement.textContent = '';
-                            errorElement.style.display = 'none';
-                        }
-                    }
-                    updateProgress();
-                });
-            }
-
-            // Validate email address
-            const emailInput = document.getElementById('email');
-            const emailError = document.getElementById('email_error');
-            if (emailInput) {
-                emailInput.addEventListener('blur', function() {
-                    const errorElement = document.getElementById(this.id + '_error');
-                    if (this.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value.trim())) {
-                        this.style.borderColor = 'red';
-                        if (errorElement) {
-                            errorElement.textContent = 'Please enter a valid email address (e.g., example@domain.com)';
-                            errorElement.style.display = 'block';
-                            errorElement.style.color = 'red';
-                        }
-                    } else {
-                        this.style.borderColor = '';
-                        if (errorElement) {
-                            errorElement.textContent = '';
-                            errorElement.style.display = 'none';
-                        }
-                    }
-                });
-
-                emailInput.addEventListener('input', function() {
-                    const errorElement = document.getElementById(this.id + '_error');
-                    if (!this.value.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value.trim())) {
-                        this.style.borderColor = '';
-                        if (errorElement) {
-                            errorElement.textContent = '';
-                            errorElement.style.display = 'none';
-                        }
-                    }
-                    updateProgress();
-                });
-            }
-
-            // Validate telephone number only if it has a value
-            const telephoneInput = document.getElementById('telephone_number');
-            if (telephoneInput) {
-                telephoneInput.addEventListener('input', function(e) {
-                    // Remove any non-digit characters from input
-                    this.value = this.value.replace(/\D/g, '');
-                    
-                    // Limit to 7 digits
-                    if (this.value.length > 7) {
-                        this.value = this.value.slice(0, 7);
-                    }
-
-                    const errorElement = document.getElementById(this.id + '_error');
-                    
-                    if (!this.value.trim()) {
-                        // Clear error immediately when empty
-                        this.style.borderColor = '';
-                        if (errorElement) {
-                            errorElement.textContent = '';
-                            errorElement.style.display = 'none';
-                        }
-                    } else if (this.value.trim().length === 7) {
-                        // Valid when exactly 7 digits
-                        this.style.borderColor = '';
-                        if (errorElement) {
-                            errorElement.textContent = '';
-                            errorElement.style.display = 'none';
-                        }
-                    } else {
-                        // Show error if some digits entered but not 7
-                        this.style.borderColor = 'red';
-                        if (errorElement) {
-                            errorElement.textContent = 'Please enter exactly 7 digits';
-                            errorElement.style.display = 'block';
-                            errorElement.style.color = 'red';
-                        }
-                    }
-                    updateProgress();
-                });
-
-                // Clear validation on backspace/delete to empty
-                telephoneInput.addEventListener('keyup', function(e) {
-                    if (!this.value.trim()) {
-                        const errorElement = document.getElementById(this.id + '_error');
-                        this.style.borderColor = '';
-                        if (errorElement) {
-                            errorElement.textContent = '';
-                            errorElement.style.display = 'none';
-                        }
-                    }
-                });
-
-                telephoneInput.addEventListener('blur', function() {
-                    const errorElement = document.getElementById(this.id + '_error');
-                    if (!this.value.trim()) {
-                        // Clear error when empty
-                        this.style.borderColor = '';
-                        if (errorElement) {
-                            errorElement.textContent = '';
-                            errorElement.style.display = 'none';
-                        }
-                    } else if (this.value.trim().length !== 7) {
-                        // Show error only if not empty and not 7 digits
-                        this.style.borderColor = 'red';
-                        if (errorElement) {
-                            errorElement.textContent = 'Please enter exactly 7 digits';
-                            errorElement.style.display = 'block';
-                            errorElement.style.color = 'red';
-                        }
-                    } else {
-                        this.style.borderColor = '';
-                        if (errorElement) {
-                            errorElement.textContent = '';
-                            errorElement.style.display = 'none';
-                        }
-                    }
-                });
-            }
-        });
-    </script>
+    </style>
 </head>
 <body>
 
@@ -703,6 +106,12 @@ $countries = array(
         <h1>Personal Data</h1>
         <p>Please fill in all required fields marked with an asterisk (*)</p>
     </div>
+
+    <?php if (!empty($errors)): ?>
+        <div class="alert alert-danger">
+            Please correct the errors below and try again.
+        </div>
+    <?php endif; ?>
 
     <form id="personalDataForm" action="process_form.php" method="POST" novalidate>
         <!-- Add hidden field for calculated age -->
@@ -723,120 +132,101 @@ $countries = array(
                         <label for="last_name">Last Name</label>
                         <div class="input-group">
                             <i class="fas fa-user"></i>
-                            <input type="text" class="form-control" id="last_name" name="last_name" required 
-                                pattern="[A-Za-z\s-]+" placeholder="Last Name"
-                                oninput="validateName(this); updateProgress()"
-                                onkeydown="return !/[0-9]/.test(event.key)">
+                            <input type="text" class="form-control" id="last_name" name="last_name" required value="<?php echo get_form_value('last_name'); ?>">
                         </div>
-                        <div class="error-message" id="last_name_error">Please enter a valid last name</div>
+                        <?php display_error('last_name'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="first_name">First Name</label>
                         <div class="input-group">
                             <i class="fas fa-user"></i>
-                            <input type="text" class="form-control" id="first_name" name="first_name" required 
-                                pattern="[A-Za-z\s-]+" placeholder="First Name"
-                                oninput="validateName(this); updateProgress()"
-                                onkeydown="return !/[0-9]/.test(event.key)">
+                            <input type="text" class="form-control" id="first_name" name="first_name" required value="<?php echo get_form_value('first_name'); ?>">
                         </div>
-                        <div class="error-message" id="first_name_error">Please enter a valid first name</div>
+                        <?php display_error('first_name'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="middle_initial">Middle Initial</label>
                         <div class="input-group">
                             <i class="fas fa-user"></i>
-                            <input type="text" class="form-control" id="middle_initial" name="middle_initial" 
-                                required maxlength="1" pattern="[A-Za-z]" placeholder="M.I."
-                                oninput="this.value = this.value.toUpperCase(); updateProgress()"
-                                onkeydown="return !/[0-9]/.test(event.key)">
+                            <input type="text" class="form-control" id="middle_initial" name="middle_initial" required maxlength="1" pattern="[A-Za-z]" value="<?php echo get_form_value('middle_initial'); ?>" placeholder="M">
                         </div>
-                        <div class="error-message" id="middle_initial_error">Please enter a single letter</div>
+                        <?php display_error('middle_initial'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="date_of_birth">Date of Birth</label>
                         <div class="input-group">
                             <i class="fas fa-calendar"></i>
-                            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" 
-                            required onchange="calculateAge()" max="<?php echo date('Y-m-d', strtotime('-18 years')); ?>">
+                            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required max="<?php echo date('Y-m-d', strtotime('-18 years')); ?>" value="<?php echo get_form_value('date_of_birth'); ?>">
                         </div>
-                        <div id="age_display" class="requirements"></div>
-                        <div class="error-message" id="date_of_birth_error"></div>
+                        <?php display_error('date_of_birth'); ?>
+                        <div id="age_display"><?php echo calculate_age(get_form_value('date_of_birth')); ?></div>
                     </div>
 
                     <div class="form-group">
                         <label>Sex</label>
                         <div class="radio-group">
                             <div class="radio-item">
-                                <input type="radio" class="radio-input" id="male" name="sex" value="male" required onchange="updateProgress()">
+                                <input type="radio" class="radio-input" id="male" name="sex" value="male" required <?php echo (isset($form_data['sex']) && $form_data['sex'] == 'male') ? 'checked' : ''; ?>>
                                 <label for="male">Male</label>
                             </div>
                             <div class="radio-item"> 
-                                <input type="radio" class="radio-input" id="female" name="sex" value="female" required onchange="updateProgress()">
+                                <input type="radio" class="radio-input" id="female" name="sex" value="female" required <?php echo (isset($form_data['sex']) && $form_data['sex'] == 'female') ? 'checked' : ''; ?>>
                                 <label for="female">Female</label>
                             </div>
                         </div>
-                        <div class="error-message" id="sex_error">Please select your sex</div>
+                        <?php display_error('sex'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="civil_status">Civil Status</label>
                         <div class="input-group">
                             <i class="fas fa-ring"></i>
-                            <select class="form-control" id="civil_status" name="civil_status" required 
-                                onchange="handleCivilStatus(); updateProgress()">
+                            <select class="form-control" id="civil_status" name="civil_status" required>
                                 <option value="">Select status</option>
-                                <option value="single">Single</option>
-                                <option value="married">Married</option>
-                                <option value="widowed">Widowed</option>
-                                <option value="divorced">Legally Separated</option>
-                                <option value="others">Others</option>
+                                <option value="single" <?php echo (isset($form_data['civil_status']) && $form_data['civil_status'] == 'single') ? 'selected' : ''; ?>>Single</option>
+                                <option value="married" <?php echo (isset($form_data['civil_status']) && $form_data['civil_status'] == 'married') ? 'selected' : ''; ?>>Married</option>
+                                <option value="widowed" <?php echo (isset($form_data['civil_status']) && $form_data['civil_status'] == 'widowed') ? 'selected' : ''; ?>>Widowed</option>
+                                <option value="divorced" <?php echo (isset($form_data['civil_status']) && $form_data['civil_status'] == 'divorced') ? 'selected' : ''; ?>>Legally Separated</option>
+                                <option value="others" <?php echo (isset($form_data['civil_status']) && $form_data['civil_status'] == 'others') ? 'selected' : ''; ?>>Others</option>
                             </select>
                         </div>
-                        <div id="others_container" style="display:none; margin-top:10px;">
+                        <?php display_error('civil_status'); ?>
+                        <div id="others_container" style="display:<?php echo (isset($form_data['civil_status']) && $form_data['civil_status'] == 'others') ? 'block' : 'none'; ?>; margin-top:10px;">
                             <div class="input-group">
                                 <i class="fas fa-pen"></i>
-                                <input type="text" class="form-control" id="others_specify" 
-                                    name="others_specify" placeholder="Please specify">
+                                <input type="text" class="form-control" id="others_specify" name="others_specify" placeholder="Please specify" value="<?php echo get_form_value('others_specify'); ?>">
                             </div>
                         </div>
-                        <div class="error-message" id="civil_status_error"></div>
                     </div>
 
                     <div class="form-group">
                         <label for="mobile_number">Mobile Number</label>
                         <div class="input-group">
                             <i class="fas fa-mobile-alt"></i>
-                            <input type="tel" class="form-control" id="mobile_number" name="mobile_number" 
-                                required pattern="\+?[\d\s-]{10,}" placeholder="+63 XXX XXX XXXX"
-                                oninput="updateProgress()">
+                            <input type="tel" class="form-control" id="mobile_number" name="mobile_number" required pattern="\+?[\d\s-]{10,}" placeholder="+63 XXX XXX XXXX" value="<?php echo get_form_value('mobile_number'); ?>">
                         </div>
-                        <div class="error-message" id="mobile_number_error"></div>
+                        <?php display_error('mobile_number'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="email">Email Address</label>
                         <div class="input-group">
                             <i class="fas fa-envelope"></i>
-                            <input type="email" class="form-control" id="email" name="email" 
-                                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" 
-                                placeholder="example@email.com"
-                                oninput="updateProgress()">
+                            <input type="email" class="form-control" id="email" name="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" placeholder="example@email.com" value="<?php echo get_form_value('email'); ?>">
                         </div>
-                        <div class="error-message" id="email_error">Please enter a valid email address</div>
+                        <?php display_error('email'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="telephone_number">Telephone Number</label>
                         <div class="input-group">
                             <i class="fas fa-phone"></i>
-                            <input type="tel" class="form-control" id="telephone_number" name="telephone_number" 
-                                placeholder="(02) XXXX-XXXX"
-                                oninput="updateProgress()">
+                            <input type="tel" class="form-control" id="telephone_number" name="telephone_number" placeholder="(02) XXXX-XXXX" value="<?php echo get_form_value('telephone_number'); ?>">
                         </div>
-                        <div class="error-message" id="telephone_number_error"></div>
+                        <?php display_error('telephone_number'); ?>
                     </div>
                 </div>
             </div>
@@ -849,9 +239,7 @@ $countries = array(
                         <label for="pob_unit_no">RM/FLR/Unit No. & Bldg. Name</label>
                         <div class="input-group">
                             <i class="fas fa-building"></i>
-                            <input type="text" class="form-control" id="pob_unit_no" name="pob_unit_no"
-                                placeholder="Room/Floor/Unit Number and Building Name"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="pob_unit_no" name="pob_unit_no" value="<?php echo get_form_value('pob_unit_no'); ?>">
                         </div>
                     </div>
 
@@ -859,9 +247,7 @@ $countries = array(
                         <label for="pob_house_no">House/Lot & Blk. No</label>
                         <div class="input-group">
                             <i class="fas fa-home"></i>
-                            <input type="text" class="form-control" id="pob_house_no" name="pob_house_no"
-                                placeholder="House/Lot and Block Number"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="pob_house_no" name="pob_house_no" value="<?php echo get_form_value('pob_house_no'); ?>">
                         </div>
                     </div>
 
@@ -869,9 +255,7 @@ $countries = array(
                         <label for="pob_street">Street Name</label>
                         <div class="input-group">
                             <i class="fas fa-road"></i>
-                            <input type="text" class="form-control" id="pob_street" name="pob_street"
-                                placeholder="Street Name"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="pob_street" name="pob_street" value="<?php echo get_form_value('pob_street'); ?>">
                         </div>
                     </div>
 
@@ -879,9 +263,7 @@ $countries = array(
                         <label for="pob_subdivision">Subdivision</label>
                         <div class="input-group">
                             <i class="fas fa-map-marked-alt"></i>
-                            <input type="text" class="form-control" id="pob_subdivision" name="pob_subdivision" 
-                                placeholder="Subdivision"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="pob_subdivision" name="pob_subdivision" value="<?php echo get_form_value('pob_subdivision'); ?>">
                         </div>
                     </div>
 
@@ -889,60 +271,52 @@ $countries = array(
                         <label for="pob_barangay">Barangay/District/Locality</label>
                         <div class="input-group">
                             <i class="fas fa-map-marker-alt"></i>
-                            <input type="text" class="form-control" id="pob_barangay" name="pob_barangay" required 
-                                placeholder="Barangay/District/Locality"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="pob_barangay" name="pob_barangay" required value="<?php echo get_form_value('pob_barangay'); ?>">
                         </div>
-                        <div class="error-message" id="pob_barangay_error"></div>
+                        <?php display_error('pob_barangay'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="pob_city">City/Municipality</label>
                         <div class="input-group">
                             <i class="fas fa-city"></i>
-                            <input type="text" class="form-control" id="pob_city" name="pob_city" required 
-                                placeholder="City/Municipality"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="pob_city" name="pob_city" required value="<?php echo get_form_value('pob_city'); ?>">
                         </div>
-                        <div class="error-message" id="pob_city_error"></div>
+                        <?php display_error('pob_city'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="pob_province">Province</label>
                         <div class="input-group">
                             <i class="fas fa-map"></i>
-                            <input type="text" class="form-control" id="pob_province" name="pob_province" required 
-                                placeholder="Province"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="pob_province" name="pob_province" required value="<?php echo get_form_value('pob_province'); ?>">
                         </div>
-                        <div class="error-message" id="pob_province_error"></div>
+                        <?php display_error('pob_province'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="pob_country">Country</label>
                         <div class="input-group">
                             <i class="fas fa-globe"></i>
-                            <select class="form-control" id="pob_country" name="pob_country" required onchange="updateProgress()">
+                            <select class="form-control" id="pob_country" name="pob_country" required>
                                 <option value="">Select Country</option>
                                 <?php
                                 foreach($countries as $country) {
-                                    echo "<option value=\"" . htmlspecialchars($country) . "\">" . htmlspecialchars($country) . "</option>";
+                                    echo "<option value=\"" . htmlspecialchars($country) . "\" " . ((isset($form_data['pob_country']) && $form_data['pob_country'] == $country) ? 'selected' : '') . ">" . htmlspecialchars($country) . "</option>";
                                 }
                                 ?>
                             </select>
                         </div>
-                        <div class="error-message" id="pob_country_error"></div>
+                        <?php display_error('pob_country'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="pob_zip_code">Zip Code</label>
                         <div class="input-group">
                             <i class="fas fa-mail-bulk"></i>
-                            <input type="text" class="form-control" id="pob_zip_code" name="pob_zip_code" required 
-                                placeholder="Zip Code" pattern="[0-9]+" 
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="pob_zip_code" name="pob_zip_code" required pattern="[0-9]+" value="<?php echo get_form_value('pob_zip_code'); ?>">
                         </div>
-                        <div class="error-message" id="pob_zip_code_error"></div>
+                        <?php display_error('pob_zip_code'); ?>
                     </div>
                 </div>
             </div>
@@ -955,42 +329,34 @@ $countries = array(
                         <label for="unit_no">RM/FLR/Unit No. & Bldg. Name</label>
                         <div class="input-group">
                             <i class="fas fa-building"></i>
-                            <input type="text" class="form-control" id="unit_no" name="unit_no" required 
-                                placeholder="Room/Floor/Unit Number and Building Name"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="unit_no" name="unit_no" required value="<?php echo get_form_value('unit_no'); ?>">
                         </div>
-                        <div class="error-message" id="unit_no_error"></div>
+                        <?php display_error('unit_no'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="house_no">House/Lot & Blk. No</label>
                         <div class="input-group">
                             <i class="fas fa-home"></i>
-                            <input type="text" class="form-control" id="house_no" name="house_no" required 
-                                placeholder="House/Lot and Block Number"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="house_no" name="house_no" required value="<?php echo get_form_value('house_no'); ?>">
                         </div>
-                        <div class="error-message" id="house_no_error"></div>
+                        <?php display_error('house_no'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="street">Street Name</label>
                         <div class="input-group">
                             <i class="fas fa-road"></i>
-                            <input type="text" class="form-control" id="street" name="street" required 
-                                placeholder="Street Name"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="street" name="street" required value="<?php echo get_form_value('street'); ?>">
                         </div>
-                        <div class="error-message" id="street_error"></div>
+                        <?php display_error('street'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="subdivision">Subdivision</label>
                         <div class="input-group">
                             <i class="fas fa-map-marked-alt"></i>
-                            <input type="text" class="form-control" id="subdivision" name="subdivision" 
-                                placeholder="Subdivision"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="subdivision" name="subdivision" value="<?php echo get_form_value('subdivision'); ?>">
                         </div>
                     </div>
 
@@ -998,60 +364,52 @@ $countries = array(
                         <label for="barangay">Barangay/District/Locality</label>
                         <div class="input-group">
                             <i class="fas fa-map-marker-alt"></i>
-                            <input type="text" class="form-control" id="barangay" name="barangay" required 
-                                placeholder="Barangay/District/Locality"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="barangay" name="barangay" required value="<?php echo get_form_value('barangay'); ?>">
                         </div>
-                        <div class="error-message" id="barangay_error"></div>
+                        <?php display_error('barangay'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="city">City/Municipality</label>
                         <div class="input-group">
                             <i class="fas fa-city"></i>
-                            <input type="text" class="form-control" id="city" name="city" required 
-                                placeholder="City/Municipality"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="city" name="city" required value="<?php echo get_form_value('city'); ?>">
                         </div>
-                        <div class="error-message" id="city_error"></div>
+                        <?php display_error('city'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="province">Province</label>
                         <div class="input-group">
                             <i class="fas fa-map"></i>
-                            <input type="text" class="form-control" id="province" name="province" required 
-                                placeholder="Province"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="province" name="province" required value="<?php echo get_form_value('province'); ?>">
                         </div>
-                        <div class="error-message" id="province_error"></div>
+                        <?php display_error('province'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="country">Country</label>
                         <div class="input-group">
                             <i class="fas fa-globe"></i>
-                            <select class="form-control" id="country" name="country" required onchange="updateProgress()">
+                            <select class="form-control" id="country" name="country" required>
                                 <option value="">Select Country</option>
                                 <?php
                                 foreach($countries as $country) {
-                                    echo "<option value=\"" . htmlspecialchars($country) . "\">" . htmlspecialchars($country) . "</option>";
+                                    echo "<option value=\"" . htmlspecialchars($country) . "\" " . ((isset($form_data['country']) && $form_data['country'] == $country) ? 'selected' : '') . ">" . htmlspecialchars($country) . "</option>";
                                 }
                                 ?>
                             </select>
                         </div>
-                        <div class="error-message" id="country_error"></div>
+                        <?php display_error('country'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="zip_code">Zip Code</label>
                         <div class="input-group">
                             <i class="fas fa-mail-bulk"></i>
-                            <input type="text" class="form-control" id="zip_code" name="zip_code" required 
-                                placeholder="Zip Code" pattern="[0-9]+" 
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="zip_code" name="zip_code" required pattern="[0-9]+" value="<?php echo get_form_value('zip_code'); ?>">
                         </div>
-                        <div class="error-message" id="zip_code_error"></div>
+                        <?php display_error('zip_code'); ?>
                     </div>
                 </div>
             </div>
@@ -1064,9 +422,7 @@ $countries = array(
                         <label for="tin">TIN Number</label>
                         <div class="input-group">
                             <i class="fas fa-id-card"></i>
-                            <input type="text" class="form-control" id="tin" name="tin" 
-                                pattern="\d{9,12}" placeholder="XXX-XXX-XXX"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="tin" name="tin" pattern="\d{9,12}" placeholder="XXX-XXX-XXX" value="<?php echo get_form_value('tin'); ?>">
                         </div>
                         <div class="requirements">Format: 9-12 digits</div>
                     </div>
@@ -1075,20 +431,16 @@ $countries = array(
                         <label for="nationality">Nationality</label>
                         <div class="input-group">
                             <i class="fas fa-globe"></i>
-                            <input type="text" class="form-control" id="nationality" name="nationality" 
-                                required pattern="[A-Za-z\s-]+" placeholder="Enter your nationality"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="nationality" name="nationality" required pattern="[A-Za-z\s-]+" placeholder="Enter your nationality" value="<?php echo get_form_value('nationality'); ?>">
                         </div>
-                        <div class="error-message" id="nationality_error"></div>
+                        <?php display_error('nationality'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="religion">Religion</label>
                         <div class="input-group">
                             <i class="fas fa-pray"></i>
-                            <input type="text" class="form-control" id="religion" name="religion" 
-                                placeholder="Enter your religion"
-                                oninput="updateProgress()">
+                            <input type="text" class="form-control" id="religion" name="religion" placeholder="Enter your religion" value="<?php echo get_form_value('religion'); ?>">
                         </div>
                     </div>
 
@@ -1100,36 +452,27 @@ $countries = array(
                         <label for="father_last_name">Last Name</label>
                         <div class="input-group">
                             <i class="fas fa-male"></i>
-                            <input type="text" class="form-control" id="father_last_name" name="father_last_name" 
-                                pattern="[A-Za-z\s-]+" placeholder="Father's Last Name"
-                                oninput="validateName(this); updateProgress()"
-                                onkeydown="return !/[0-9]/.test(event.key)">
+                            <input type="text" class="form-control" id="father_last_name" name="father_last_name" pattern="[A-Za-z\s-]+" placeholder="Father's Last Name" value="<?php echo get_form_value('father_last_name'); ?>">
                         </div>
-                        <div class="error-message" id="father_last_name_error">Please enter a valid last name</div>
+                        <?php display_error('father_last_name'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="father_first_name">First Name</label>
                         <div class="input-group">
                             <i class="fas fa-male"></i>
-                            <input type="text" class="form-control" id="father_first_name" name="father_first_name" 
-                                pattern="[A-Za-z\s-]+" placeholder="Father's First Name"
-                                oninput="validateName(this); updateProgress()"
-                                onkeydown="return !/[0-9]/.test(event.key)">
+                            <input type="text" class="form-control" id="father_first_name" name="father_first_name" pattern="[A-Za-z\s-]+" placeholder="Father's First Name" value="<?php echo get_form_value('father_first_name'); ?>">
                         </div>
-                        <div class="error-message" id="father_first_name_error">Please enter a valid first name</div>
+                        <?php display_error('father_first_name'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="father_middle_name">Middle Name</label>
                         <div class="input-group">
                             <i class="fas fa-male"></i>
-                            <input type="text" class="form-control" id="father_middle_name" name="father_middle_name" 
-                                pattern="[A-Za-z\s-]+" placeholder="Father's Middle Name"
-                                oninput="validateName(this); updateProgress()"
-                                onkeydown="return !/[0-9]/.test(event.key)">
+                            <input type="text" class="form-control" id="father_middle_name" name="father_middle_name" pattern="[A-Za-z\s-]+" placeholder="Father's Middle Name" value="<?php echo get_form_value('father_middle_name'); ?>">
                         </div>
-                        <div class="error-message" id="father_middle_name_error">Please enter a valid middle name</div>
+                        <?php display_error('father_middle_name'); ?>
                     </div>
 
                     <div class="form-group full-width">
@@ -1140,36 +483,27 @@ $countries = array(
                         <label for="mother_last_name">Last Name</label>
                         <div class="input-group">
                             <i class="fas fa-female"></i>
-                            <input type="text" class="form-control" id="mother_last_name" name="mother_last_name" 
-                                pattern="[A-Za-z\s-]+" placeholder="Mother's Last Name"
-                                oninput="validateName(this); updateProgress()"
-                                onkeydown="return !/[0-9]/.test(event.key)">
+                            <input type="text" class="form-control" id="mother_last_name" name="mother_last_name" pattern="[A-Za-z\s-]+" placeholder="Mother's Last Name" value="<?php echo get_form_value('mother_last_name'); ?>">
                         </div>
-                        <div class="error-message" id="mother_last_name_error">Please enter a valid last name</div>
+                        <?php display_error('mother_last_name'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="mother_first_name">First Name</label>
                         <div class="input-group">
                             <i class="fas fa-female"></i>
-                            <input type="text" class="form-control" id="mother_first_name" name="mother_first_name" 
-                                pattern="[A-Za-z\s-]+" placeholder="Mother's First Name"
-                                oninput="validateName(this); updateProgress()"
-                                onkeydown="return !/[0-9]/.test(event.key)">
+                            <input type="text" class="form-control" id="mother_first_name" name="mother_first_name" pattern="[A-Za-z\s-]+" placeholder="Mother's First Name" value="<?php echo get_form_value('mother_first_name'); ?>">
                         </div>
-                        <div class="error-message" id="mother_first_name_error">Please enter a valid first name</div>
+                        <?php display_error('mother_first_name'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="mother_middle_name">Middle Name</label>
                         <div class="input-group">
                             <i class="fas fa-female"></i>
-                            <input type="text" class="form-control" id="mother_middle_name" name="mother_middle_name" 
-                                pattern="[A-Za-z\s-]+" placeholder="Mother's Middle Name"
-                                oninput="validateName(this); updateProgress()"
-                                onkeydown="return !/[0-9]/.test(event.key)">
+                            <input type="text" class="form-control" id="mother_middle_name" name="mother_middle_name" pattern="[A-Za-z\s-]+" placeholder="Mother's Middle Name" value="<?php echo get_form_value('mother_middle_name'); ?>">
                         </div>
-                        <div class="error-message" id="mother_middle_name_error">Please enter a valid middle name</div>
+                        <?php display_error('mother_middle_name'); ?>
                     </div>
                 </div>
             </div>
@@ -1185,58 +519,40 @@ $countries = array(
 </div>
 
 <script>
-function updateProgress() {
-    const form = document.getElementById('personalDataForm');
-    const requiredFields = form.querySelectorAll('[required]');
-    const totalFields = requiredFields.length;
-    let filledFields = 0;
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle civil status others visibility
+    const civilStatus = document.getElementById('civil_status');
+    const othersContainer = document.getElementById('others_container');
     
-    requiredFields.forEach(field => {
-        if (field.type === 'radio') {
-            if (document.querySelector(`input[name="${field.name}"]:checked`)) {
-                filledFields++;
-            }
-        } else if (field.value.trim() !== '') {
-            filledFields++;
-        }
-    });
+    if (civilStatus && othersContainer) {
+        civilStatus.addEventListener('change', function() {
+            othersContainer.style.display = this.value === 'others' ? 'block' : 'none';
+        });
+    }
+
+    // Display age if date of birth is set
+    const dobInput = document.getElementById('date_of_birth');
+    const ageDisplay = document.getElementById('age_display');
     
-    const progress = Math.round((filledFields / totalFields) * 100);
-    document.getElementById('progressText').textContent = `${progress}%`;
-    document.getElementById('formProgress').style.width = `${progress}%`;
-}
-
-// Add input event listeners to all text inputs
-document.querySelectorAll('input[type="text"]').forEach(input => {
-    input.addEventListener('input', function() {
-        // Remove multiple spaces
-        this.value = this.value.replace(/\s+/g, ' ');
-        // Remove spaces at the beginning
-        this.value = this.value.replace(/^\s+/, '');
-        // Update form progress
-        updateProgress();
-    });
-});
-
-// Initialize progress bar on page load
-document.addEventListener('DOMContentLoaded', updateProgress);
-
-// Add validation on blur for all inputs
-document.querySelectorAll('input, select').forEach(input => {
-    input.addEventListener('blur', function() {
-        if (this.required) {
-            const errorDiv = document.getElementById(`${this.id}_error`);
-            if (!this.value.trim() || (this.validity && !this.validity.valid)) {
-                this.classList.add('error');
-                if (errorDiv) errorDiv.style.display = 'block';
+    if (dobInput && ageDisplay) {
+        dobInput.addEventListener('change', function() {
+            if (this.value) {
+                const dob = new Date(this.value);
+                const today = new Date('2025-02-13');
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDiff = today.getMonth() - dob.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+                
+                ageDisplay.textContent = `Age: ${age} years old`;
             } else {
-                this.classList.remove('error');
-                if (errorDiv) errorDiv.style.display = 'none';
+                ageDisplay.textContent = '';
             }
-        }
-    });
-}
+        });
+    }
+});
 </script>
-
 </body>
 </html>

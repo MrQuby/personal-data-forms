@@ -1,5 +1,5 @@
 <?php
-// process_form.php
+session_start();
 
 // Function to sanitize input
 function sanitize_input($data) {
@@ -9,33 +9,174 @@ function sanitize_input($data) {
     return $data;
 }
 
+// Function to check if string is empty or only spaces
+function is_empty_or_spaces($str) {
+    return !isset($str) || trim($str) === '';
+}
+
 // Function to format name
-function format_name($last_name, $first_name, $middle_initial) {
-    // If all fields are empty, return empty string
-    if (empty($last_name) && empty($first_name) && empty($middle_initial)) {
-        return '';
+function format_name($last_name, $first_name, $middle_initial = '') {
+    $name_parts = array($last_name);
+    
+    if (!empty($first_name)) {
+        $name_parts[] = $first_name;
     }
     
-    // Capitalize first letter of each word in last name and first name
-    $last_name = ucwords(strtolower($last_name));
-    $first_name = ucwords(strtolower($first_name));
-    
-    // Build the formatted name only if both last name and first name are present
-    if (!empty($last_name) && !empty($first_name)) {
-        $formatted_name = $last_name . ', ' . $first_name;
-        if (!empty($middle_initial)) {
-            // Take only the first character and make it uppercase
-            $middle_initial = strtoupper(substr($middle_initial, 0, 1));
-            $formatted_name .= ' ' . $middle_initial . '.';
-        }
-        return $formatted_name;
+    if (!empty($middle_initial)) {
+        $name_parts[] = $middle_initial;
     }
     
-    return '';
+    return implode(', ', $name_parts);
+}
+
+// Function to validate name format
+function validate_name($name) {
+    return preg_match("/^[A-Za-z\s-]+$/", trim($name));
+}
+
+// Function to validate mobile number
+function validate_mobile($number) {
+    return preg_match("/^\+?[\d\s-]{10,}$/", trim($number));
+}
+
+// Function to validate telephone number
+function validate_telephone($number) {
+    return preg_match("/^[\d\s-]+$/", trim($number));
+}
+
+// Function to validate zip code
+function validate_zip($zip) {
+    return preg_match("/^\d{4,}$/", trim($zip));
+}
+
+// Function to validate TIN
+function validate_tin($tin) {
+    return preg_match("/^\d{9,12}$/", trim($tin));
 }
 
 // Check if form was submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $errors = [];
+    
+    // Store all POST data in session
+    $_SESSION['form_data'] = $_POST;
+    
+    // Validate required fields
+    $required_fields = [
+        'last_name' => 'Last Name',
+        'first_name' => 'First Name',
+        'middle_initial' => 'Middle Initial',
+        'date_of_birth' => 'Date of Birth',
+        'sex' => 'Sex',
+        'civil_status' => 'Civil Status',
+        'nationality' => 'Nationality',
+        'email' => 'Email',
+        'mobile_number' => 'Mobile Number'
+    ];
+
+    // Check required fields
+    foreach ($required_fields as $field => $label) {
+        if (is_empty_or_spaces($_POST[$field] ?? '')) {
+            $errors[$field] = "$label is required";
+        }
+    }
+
+    // Validate names (last name, first name)
+    foreach (['last_name', 'first_name'] as $field) {
+        if (!empty($_POST[$field]) && !validate_name($_POST[$field])) {
+            $errors[$field] = "Please use only letters, spaces, and hyphens for " . strtolower($required_fields[$field]);
+        }
+    }
+
+    // Validate middle initial
+    if (!empty($_POST['middle_initial'])) {
+        if (!preg_match("/^[A-Za-z]$/", trim($_POST['middle_initial']))) {
+            $errors['middle_initial'] = "Middle initial must be a single letter";
+        }
+    } else {
+        $errors['middle_initial'] = "Middle initial is required";
+    }
+
+    // Validate date of birth
+    if (!empty($_POST['date_of_birth'])) {
+        $dob = new DateTime($_POST['date_of_birth']);
+        $today = new DateTime('2025-02-13'); // Using provided current time
+        
+        if ($dob > $today) {
+            $errors['date_of_birth'] = "Date of birth cannot be in the future.";
+        } else {
+            $age = $today->diff($dob)->y;
+            $_SESSION['form_data']['age'] = $age;
+            
+            if ($age < 18) {
+                $errors['date_of_birth'] = "You must be at least 18 years old to submit this form.";
+            }
+        }
+    }
+
+    // Validate email
+    if (!empty($_POST['email'])) {
+        if (!filter_var(trim($_POST['email']), FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = "Please enter a valid email address (e.g., example@domain.com).";
+        }
+    }
+
+    // Validate mobile number
+    if (!empty($_POST['mobile_number']) && !validate_mobile($_POST['mobile_number'])) {
+        $errors['mobile_number'] = "Please enter a valid mobile number (e.g., +63 XXX XXX XXXX).";
+    }
+
+    // Validate telephone number (if provided)
+    if (!empty($_POST['telephone_number']) && !validate_telephone($_POST['telephone_number'])) {
+        $errors['telephone_number'] = "Please enter a valid telephone number (e.g., (02) XXXX-XXXX).";
+    }
+
+    // Validate nationality
+    if (!empty($_POST['nationality']) && !validate_name($_POST['nationality'])) {
+        $errors['nationality'] = "Please use only letters, spaces, and hyphens for nationality.";
+    }
+
+    // Validate zip codes
+    if (!empty($_POST['zip_code']) && !validate_zip($_POST['zip_code'])) {
+        $errors['zip_code'] = "Please enter a valid zip code (at least 4 digits).";
+    }
+    if (!empty($_POST['pob_zip_code']) && !validate_zip($_POST['pob_zip_code'])) {
+        $errors['pob_zip_code'] = "Please enter a valid zip code (at least 4 digits).";
+    }
+
+    // Validate TIN (if provided)
+    if (!empty($_POST['tin']) && !validate_tin($_POST['tin'])) {
+        $errors['tin'] = "Please enter a valid TIN number (9-12 digits).";
+    }
+
+    // Validate civil status others
+    if (isset($_POST['civil_status']) && $_POST['civil_status'] === 'others') {
+        if (is_empty_or_spaces($_POST['others_specify'] ?? '')) {
+            $errors['others_specify'] = "Please specify your civil status.";
+        }
+    }
+
+    // Validate address fields
+    $address_fields = [
+        'barangay' => 'Barangay',
+        'city' => 'City',
+        'province' => 'Province',
+        'country' => 'Country'
+    ];
+
+    foreach ($address_fields as $field => $label) {
+        if (is_empty_or_spaces($_POST[$field] ?? '')) {
+            $errors[$field] = "$label is required and cannot be empty.";
+        }
+    }
+
+    // If there are errors, store them in session and redirect back
+    if (!empty($errors)) {
+        $_SESSION['errors'] = $errors;
+        header('Location: index.php');
+        exit();
+    }
+
     // Sanitize and store all inputs
     $last_name = sanitize_input($_POST['last_name'] ?? '');
     $first_name = sanitize_input($_POST['first_name'] ?? '');
@@ -104,6 +245,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Format the full name of the person
     $full_name = format_name($last_name, $first_name, $middle_initial);
+    
     ?>
     <!DOCTYPE html>
     <html lang="en">
@@ -139,7 +281,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="result-item">
                     <div class="icon-container"><i class="fas fa-birthday-cake"></i></div>
                     <span class="result-label">Age:</span>
-                    <span><?php echo $calculated_age; ?> years old</span>
+                    <span><?php echo $_SESSION['form_data']['age']; ?> years old</span>
                 </div>
 
                 <div class="result-item">
