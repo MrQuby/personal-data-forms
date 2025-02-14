@@ -16,17 +16,20 @@ function is_empty_or_spaces($str) {
 
 // Function to format name
 function format_name($last_name, $first_name, $middle_initial = '') {
-    $name_parts = array($last_name);
-    
-    if (!empty($first_name)) {
-        $name_parts[] = $first_name;
-    }
+    // Capitalize first letter of each word in names
+    $last_name = ucwords(strtolower($last_name));
+    $first_name = ucwords(strtolower($first_name));
+    $middle_initial = strtoupper($middle_initial);
+
+    $formatted_name = $last_name . ', ' . $first_name;
     
     if (!empty($middle_initial)) {
-        $name_parts[] = $middle_initial;
+        // Get first character of middle initial if it's longer
+        $middle_initial = substr($middle_initial, 0, 1);
+        $formatted_name .= ' ' . $middle_initial . '.';
     }
     
-    return implode(', ', $name_parts);
+    return $formatted_name;
 }
 
 // Function to validate name format
@@ -36,12 +39,12 @@ function validate_name($name) {
 
 // Function to validate mobile number
 function validate_mobile($number) {
-    return preg_match("/^\+?[\d\s-]{10,}$/", trim($number));
+    return preg_match("/^\+?[\d\s-]{11,}$/", trim($number));
 }
 
 // Function to validate telephone number
 function validate_telephone($number) {
-    return preg_match("/^[\d\s-]+$/", trim($number));
+    return preg_match("/^\+?[\d\s-]{7,}+$/", trim($number));
 }
 
 // Function to validate zip code
@@ -70,7 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'sex' => 'Sex',
         'civil_status' => 'Civil Status',
         'nationality' => 'Nationality',
-        'email' => 'Email',
+        // 'email' => 'Email',
         'mobile_number' => 'Mobile Number',
         // Add required place of birth fields
         'pob_street' => 'Place of Birth Street',
@@ -139,12 +142,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate mobile number
     if (!empty($_POST['mobile_number']) && !validate_mobile($_POST['mobile_number'])) {
-        $errors['mobile_number'] = "Please enter a valid mobile number (e.g., +63 XXX XXX XXXX).";
+        $errors['mobile_number'] = "Please enter a valid mobile number (e.g., 09XX XXX XXXX).";
     }
 
     // Validate telephone number (if provided)
     if (!empty($_POST['telephone_number']) && !validate_telephone($_POST['telephone_number'])) {
-        $errors['telephone_number'] = "Please enter a valid telephone number (e.g., (02) XXXX-XXXX).";
+        $errors['telephone_number'] = "Please enter a valid telephone number (e.g., XXXX-XXXX).";
     }
 
     // Validate nationality
@@ -172,6 +175,71 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
+    // Validate first name
+    if (empty($_POST['first_name']) || !validate_name($_POST['first_name'])) {
+        $errors['first_name'] = "Please enter a valid first name using only letters.";
+    }
+
+    // Validate middle initial
+    if (empty($_POST['middle_initial']) || !validate_name($_POST['middle_initial'])) {
+        $errors['middle_initial'] = "Please enter a valid middle initial using only letters.";
+    }
+
+    // Validate last name
+    if (empty($_POST['last_name']) || !validate_name($_POST['last_name'])) {
+        $errors['last_name'] = "Please enter a valid last name using only letters.";
+    }
+
+    // Validate father's name - if any field is filled, all must be filled
+    $father_first_filled = !empty($_POST['father_first_name']);
+    $father_middle_filled = !empty($_POST['father_middle_name']);
+    $father_last_filled = !empty($_POST['father_last_name']);
+    
+    if ($father_first_filled || $father_middle_filled || $father_last_filled) {
+        if (!$father_first_filled) {
+            $errors['father_first_name'] = "Please complete all father's name fields or leave them all empty.";
+        } elseif (!validate_name($_POST['father_first_name'])) {
+            $errors['father_first_name'] = "Please enter a valid first name using only letters.";
+        }
+        
+        if (!$father_middle_filled) {
+            $errors['father_middle_name'] = "Please complete all father's name fields or leave them all empty.";
+        } elseif (!validate_name($_POST['father_middle_name'])) {
+            $errors['father_middle_name'] = "Please enter a valid middle name using only letters.";
+        }
+        
+        if (!$father_last_filled) {
+            $errors['father_last_name'] = "Please complete all father's name fields or leave them all empty.";
+        } elseif (!validate_name($_POST['father_last_name'])) {
+            $errors['father_last_name'] = "Please enter a valid last name using only letters.";
+        }
+    }
+
+    // Validate mother's maiden name - if any field is filled, all must be filled
+    $mother_first_filled = !empty($_POST['mother_first_name']);
+    $mother_middle_filled = !empty($_POST['mother_middle_name']);
+    $mother_last_filled = !empty($_POST['mother_last_name']);
+    
+    if ($mother_first_filled || $mother_middle_filled || $mother_last_filled) {
+        if (!$mother_first_filled) {
+            $errors['mother_first_name'] = "Please complete all mother's name fields or leave them all empty.";
+        } elseif (!validate_name($_POST['mother_first_name'])) {
+            $errors['mother_first_name'] = "Please enter a valid first name using only letters.";
+        }
+        
+        if (!$mother_middle_filled) {
+            $errors['mother_middle_name'] = "Please complete all mother's name fields or leave them all empty.";
+        } elseif (!validate_name($_POST['mother_middle_name'])) {
+            $errors['mother_middle_name'] = "Please enter a valid middle name using only letters.";
+        }
+        
+        if (!$mother_last_filled) {
+            $errors['mother_last_name'] = "Please complete all mother's name fields or leave them all empty.";
+        } elseif (!validate_name($_POST['mother_last_name'])) {
+            $errors['mother_last_name'] = "Please enter a valid last name using only letters.";
+        }
+    }
+
     // If there are errors, store them in session and redirect back
     if (!empty($errors)) {
         $_SESSION['errors'] = $errors;
@@ -192,6 +260,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $religion = sanitize_input($_POST['religion'] ?? '');
     $nationality = sanitize_input($_POST['nationality'] ?? '');
     $tin = sanitize_input($_POST['tin'] ?? '');
+    
+    // Capitalize name components
+    $last_name = ucwords(strtolower($last_name));
+    $first_name = ucwords(strtolower($first_name));
+    $middle_initial = strtoupper($middle_initial);
+    $nationality = ucwords(strtolower($nationality));
     
     // Format home address
     $unit_no = sanitize_input($_POST['unit_no'] ?? '');
@@ -235,18 +309,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $zip_code
     ]));
 
-    // Process father's name
-    $father_last_name = sanitize_input($_POST['father_last_name'] ?? '');
-    $father_first_name = sanitize_input($_POST['father_first_name'] ?? '');
-    $father_middle_name = sanitize_input($_POST['father_middle_name'] ?? '');
-    $fathers_name = format_name($father_last_name, $father_first_name, $father_middle_name);
+    // Get parent information - only if all fields are filled
+    $father_name = '';
+    if ($father_first_filled && $father_middle_filled && $father_last_filled) {
+        $father_first_name = sanitize_input($_POST['father_first_name']);
+        $father_middle_name = sanitize_input($_POST['father_middle_name']);
+        $father_last_name = sanitize_input($_POST['father_last_name']);
+        $father_name = format_name($father_last_name, $father_first_name, $father_middle_name);
+    }
 
-    // Process mother's maiden name
-    $mother_last_name = sanitize_input($_POST['mother_last_name'] ?? '');
-    $mother_first_name = sanitize_input($_POST['mother_first_name'] ?? '');
-    $mother_middle_name = sanitize_input($_POST['mother_middle_name'] ?? '');
-    $mothers_name = format_name($mother_last_name, $mother_first_name, $mother_middle_name);
-    
+    $mother_name = '';
+    if ($mother_first_filled && $mother_middle_filled && $mother_last_filled) {
+        $mother_first_name = sanitize_input($_POST['mother_first_name']);
+        $mother_middle_name = sanitize_input($_POST['mother_middle_name']);
+        $mother_last_name = sanitize_input($_POST['mother_last_name']);
+        $mother_name = format_name($mother_last_name, $mother_first_name, $mother_middle_name);
+    }
+
     // Format the full name of the person
     $full_name = format_name($last_name, $first_name, $middle_initial);
     
@@ -369,21 +448,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
                 <?php endif; ?>
 
-                <?php if (!empty($fathers_name) || !empty($mothers_name)): ?>
-                <h3 class="section-title"><i class="fas fa-users"></i> Family Information</h3>
-                <?php if (!empty($fathers_name)): ?>
+                <?php if (!empty($father_name) || !empty($mother_name)): ?>
+                <h3 class="section-title"><i class="fas fa-users"></i> Parent Information</h3>
+                <?php if (!empty($father_name)): ?>
                 <div class="result-item">
                     <div class="icon-container"><i class="fas fa-male"></i></div>
                     <span class="result-label">Father's Name:</span>
-                    <span><?php echo $fathers_name; ?></span>
+                    <span><?php echo $father_name; ?></span>
                 </div>
                 <?php endif; ?>
 
-                <?php if (!empty($mothers_name)): ?>
+                <?php if (!empty($mother_name)): ?>
                 <div class="result-item">
                     <div class="icon-container"><i class="fas fa-female"></i></div>
                     <span class="result-label">Mother's Maiden Name:</span>
-                    <span><?php echo $mothers_name; ?></span>
+                    <span><?php echo $mother_name; ?></span>
                 </div>
                 <?php endif; ?>
                 <?php endif; ?>
@@ -395,18 +474,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
             </div>
         </div>
-
-        <script>
-            // Add smooth scroll animation
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    document.querySelector(this.getAttribute('href')).scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                });
-            });
-        </script>
+        <script src="script.js"></script>
     </body>
     </html>
     <?php

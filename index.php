@@ -63,7 +63,7 @@ function calculate_age($date_of_birth) {
     $dob = new DateTime($date_of_birth);
     $today = new DateTime('2025-02-13'); // Using provided current time
     $age = $today->diff($dob)->y;
-    return $age;
+    return "Age: " . $age . " years old";
 }
 ?>
 
@@ -75,29 +75,6 @@ function calculate_age($date_of_birth) {
     <title>Personal Information Form</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
-    <style>
-        .error-message {
-            color: #dc3545;
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-            display: block;
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        .input-error {
-            border-color: #dc3545 !important;
-        }
-        .requirements {
-            color: #6c757d;
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-        }
-        #age_display {
-            margin-top: 0.25rem;
-            font-weight: bold;
-        }
-    </style>
 </head>
 <body>
 
@@ -109,7 +86,7 @@ function calculate_age($date_of_birth) {
 
     <?php if (!empty($errors)): ?>
         <div class="alert alert-danger">
-            Please correct the errors below and try again.
+            Please double-check your input and try again.
         </div>
     <?php endif; ?>
 
@@ -132,7 +109,7 @@ function calculate_age($date_of_birth) {
                         <label for="last_name">Last Name</label>
                         <div class="input-group">
                             <i class="fas fa-user"></i>
-                            <input type="text" class="form-control" id="last_name" name="last_name" required value="<?php echo get_form_value('last_name'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['last_name']) ? 'input-error' : ''; ?>" id="last_name" name="last_name" pattern="^[A-Za-z\s-]+$" required placeholder="Enter your last name" value="<?php echo get_form_value('last_name'); ?>">
                         </div>
                         <?php display_error('last_name'); ?>
                     </div>
@@ -141,7 +118,7 @@ function calculate_age($date_of_birth) {
                         <label for="first_name">First Name</label>
                         <div class="input-group">
                             <i class="fas fa-user"></i>
-                            <input type="text" class="form-control" id="first_name" name="first_name" required value="<?php echo get_form_value('first_name'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['first_name']) ? 'input-error' : ''; ?>" id="first_name" name="first_name" pattern="^[A-Za-z\s-]+$" required placeholder="Enter your first name" value="<?php echo get_form_value('first_name'); ?>">
                         </div>
                         <?php display_error('first_name'); ?>
                     </div>
@@ -150,7 +127,7 @@ function calculate_age($date_of_birth) {
                         <label for="middle_initial">Middle Initial</label>
                         <div class="input-group">
                             <i class="fas fa-user"></i>
-                            <input type="text" class="form-control" id="middle_initial" name="middle_initial" required maxlength="1" pattern="[A-Za-z]" value="<?php echo get_form_value('middle_initial'); ?>" placeholder="M">
+                            <input type="text" class="form-control <?php echo isset($errors['middle_initial']) ? 'input-error' : ''; ?>" id="middle_initial" name="middle_initial" pattern="^[A-Za-z\s-]+$" required placeholder="Enter middle initial" value="<?php echo get_form_value('middle_initial'); ?>">
                         </div>
                         <?php display_error('middle_initial'); ?>
                     </div>
@@ -159,7 +136,7 @@ function calculate_age($date_of_birth) {
                         <label for="date_of_birth">Date of Birth</label>
                         <div class="input-group">
                             <i class="fas fa-calendar"></i>
-                            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required max="<?php echo date('Y-m-d', strtotime('-18 years')); ?>" value="<?php echo get_form_value('date_of_birth'); ?>">
+                            <input type="date" class="form-control <?php echo isset($errors['date_of_birth']) ? 'input-error' : ''; ?>" id="date_of_birth" name="date_of_birth" required value="<?php echo get_form_value('date_of_birth'); ?>">
                         </div>
                         <?php display_error('date_of_birth'); ?>
                         <div id="age_display"><?php echo calculate_age(get_form_value('date_of_birth')); ?></div>
@@ -167,7 +144,7 @@ function calculate_age($date_of_birth) {
 
                     <div class="form-group">
                         <label>Sex</label>
-                        <div class="radio-group">
+                        <div class="radio-group <?php echo isset($errors['sex']) ? 'input-error' : ''; ?>">
                             <div class="radio-item">
                                 <input type="radio" class="radio-input" id="male" name="sex" value="male" required <?php echo (isset($form_data['sex']) && $form_data['sex'] == 'male') ? 'checked' : ''; ?>>
                                 <label for="male">Male</label>
@@ -184,8 +161,8 @@ function calculate_age($date_of_birth) {
                         <label for="civil_status">Civil Status</label>
                         <div class="input-group">
                             <i class="fas fa-ring"></i>
-                            <select class="form-control" id="civil_status" name="civil_status" required>
-                                <option value="">Select status</option>
+                            <select class="form-control <?php echo isset($errors['civil_status']) ? 'input-error' : ''; ?>" id="civil_status" name="civil_status" required>
+                                <option value="" <?php echo !isset($form_data['civil_status']) ? 'selected' : ''; ?> disabled>Select Civil Status</option>
                                 <option value="single" <?php echo (isset($form_data['civil_status']) && $form_data['civil_status'] == 'single') ? 'selected' : ''; ?>>Single</option>
                                 <option value="married" <?php echo (isset($form_data['civil_status']) && $form_data['civil_status'] == 'married') ? 'selected' : ''; ?>>Married</option>
                                 <option value="widowed" <?php echo (isset($form_data['civil_status']) && $form_data['civil_status'] == 'widowed') ? 'selected' : ''; ?>>Widowed</option>
@@ -206,7 +183,7 @@ function calculate_age($date_of_birth) {
                         <label for="mobile_number">Mobile Number</label>
                         <div class="input-group">
                             <i class="fas fa-mobile-alt"></i>
-                            <input type="tel" class="form-control" id="mobile_number" name="mobile_number" required pattern="\+?[\d\s-]{10,}" placeholder="+63 XXX XXX XXXX" value="<?php echo get_form_value('mobile_number'); ?>">
+                            <input type="tel" class="form-control <?php echo isset($errors['mobile_number']) ? 'input-error' : ''; ?>" id="mobile_number" name="mobile_number" required pattern="\+?[\d\s-]{10,}" placeholder="09XX XXX XXXX" value="<?php echo get_form_value('mobile_number'); ?>">
                         </div>
                         <?php display_error('mobile_number'); ?>
                     </div>
@@ -215,7 +192,7 @@ function calculate_age($date_of_birth) {
                         <label for="email">Email Address</label>
                         <div class="input-group">
                             <i class="fas fa-envelope"></i>
-                            <input type="email" class="form-control" id="email" name="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" placeholder="example@email.com" value="<?php echo get_form_value('email'); ?>">
+                            <input type="email" class="form-control <?php echo isset($errors['email']) ? 'input-error' : ''; ?>" id="email" name="email" placeholder="example@domain.com" value="<?php echo get_form_value('email'); ?>">
                         </div>
                         <?php display_error('email'); ?>
                     </div>
@@ -224,7 +201,7 @@ function calculate_age($date_of_birth) {
                         <label for="telephone_number">Telephone Number</label>
                         <div class="input-group">
                             <i class="fas fa-phone"></i>
-                            <input type="tel" class="form-control" id="telephone_number" name="telephone_number" placeholder="(02) XXXX-XXXX" value="<?php echo get_form_value('telephone_number'); ?>">
+                            <input type="tel" class="form-control <?php echo isset($errors['telephone_number']) ? 'input-error' : ''; ?>" id="telephone_number" name="telephone_number" pattern="\+?[\d\s-]{7,}" placeholder="XXX XXXX" value="<?php echo get_form_value('telephone_number'); ?>">
                         </div>
                         <?php display_error('telephone_number'); ?>
                     </div>
@@ -239,15 +216,16 @@ function calculate_age($date_of_birth) {
                         <label for="pob_unit_no">RM/FLR/Unit No. & Bldg. Name</label>
                         <div class="input-group">
                             <i class="fas fa-building"></i>
-                            <input type="text" class="form-control" id="pob_unit_no" name="pob_unit_no" value="<?php echo get_form_value('pob_unit_no'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['pob_unit_no']) ? 'input-error' : ''; ?>" id="pob_unit_no" name="pob_unit_no" placeholder="Enter room/floor/unit number" value="<?php echo get_form_value('pob_unit_no'); ?>">
                         </div>
+                        <?php display_error('pob_unit_no'); ?>
                     </div>
 
                     <div class="form-group">
                         <label for="pob_house_no">House/Lot & Blk. No</label>
                         <div class="input-group">
                             <i class="fas fa-home"></i>
-                            <input type="text" class="form-control" id="pob_house_no" name="pob_house_no" value="<?php echo get_form_value('pob_house_no'); ?>">
+                            <input type="text" class="form-control" id="pob_house_no" name="pob_house_no" placeholder="Enter house/lot & block no." value="<?php echo get_form_value('pob_house_no'); ?>">
                         </div>
                     </div>
 
@@ -255,7 +233,7 @@ function calculate_age($date_of_birth) {
                         <label for="pob_street">Street Name</label>
                         <div class="input-group">
                             <i class="fas fa-road"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['pob_street']) ? 'input-error' : ''; ?>" id="pob_street" name="pob_street" required value="<?php echo get_form_value('pob_street'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['pob_street']) ? 'input-error' : ''; ?>" id="pob_street" name="pob_street" required placeholder="Enter street name" value="<?php echo get_form_value('pob_street'); ?>">
                         </div>
                         <?php display_error('pob_street'); ?>
                     </div>
@@ -264,7 +242,7 @@ function calculate_age($date_of_birth) {
                         <label for="pob_subdivision">Subdivision</label>
                         <div class="input-group">
                             <i class="fas fa-map-marked-alt"></i>
-                            <input type="text" class="form-control" id="pob_subdivision" name="pob_subdivision" value="<?php echo get_form_value('pob_subdivision'); ?>">
+                            <input type="text" class="form-control" id="pob_subdivision" name="pob_subdivision" placeholder="Enter subdivision" value="<?php echo get_form_value('pob_subdivision'); ?>">
                         </div>
                     </div>
 
@@ -272,7 +250,7 @@ function calculate_age($date_of_birth) {
                         <label for="pob_barangay">Barangay/District/Locality</label>
                         <div class="input-group">
                             <i class="fas fa-map-marker-alt"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['pob_barangay']) ? 'input-error' : ''; ?>" id="pob_barangay" name="pob_barangay" required value="<?php echo get_form_value('pob_barangay'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['pob_barangay']) ? 'input-error' : ''; ?>" id="pob_barangay" name="pob_barangay" required placeholder="Enter barangay" value="<?php echo get_form_value('pob_barangay'); ?>">
                         </div>
                         <?php display_error('pob_barangay'); ?>
                     </div>
@@ -281,7 +259,7 @@ function calculate_age($date_of_birth) {
                         <label for="pob_city">City/Municipality</label>
                         <div class="input-group">
                             <i class="fas fa-city"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['pob_city']) ? 'input-error' : ''; ?>" id="pob_city" name="pob_city" required value="<?php echo get_form_value('pob_city'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['pob_city']) ? 'input-error' : ''; ?>" id="pob_city" name="pob_city" required placeholder="Enter city/municipality" value="<?php echo get_form_value('pob_city'); ?>">
                         </div>
                         <?php display_error('pob_city'); ?>
                     </div>
@@ -290,7 +268,7 @@ function calculate_age($date_of_birth) {
                         <label for="pob_province">Province</label>
                         <div class="input-group">
                             <i class="fas fa-map"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['pob_province']) ? 'input-error' : ''; ?>" id="pob_province" name="pob_province" required value="<?php echo get_form_value('pob_province'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['pob_province']) ? 'input-error' : ''; ?>" id="pob_province" name="pob_province" required placeholder="Enter province" value="<?php echo get_form_value('pob_province'); ?>">
                         </div>
                         <?php display_error('pob_province'); ?>
                     </div>
@@ -315,7 +293,7 @@ function calculate_age($date_of_birth) {
                         <label for="pob_zip_code">Zip Code</label>
                         <div class="input-group">
                             <i class="fas fa-mail-bulk"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['pob_zip_code']) ? 'input-error' : ''; ?>" id="pob_zip_code" name="pob_zip_code" required pattern="[0-9]+" value="<?php echo get_form_value('pob_zip_code'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['pob_zip_code']) ? 'input-error' : ''; ?>" id="pob_zip_code" name="pob_zip_code" required pattern="[0-9]+" placeholder="Enter zip code" value="<?php echo get_form_value('pob_zip_code'); ?>">
                         </div>
                         <?php display_error('pob_zip_code'); ?>
                     </div>
@@ -330,7 +308,7 @@ function calculate_age($date_of_birth) {
                         <label for="unit_no">RM/FLR/Unit No. & Bldg. Name</label>
                         <div class="input-group">
                             <i class="fas fa-building"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['unit_no']) ? 'input-error' : ''; ?>" id="unit_no" name="unit_no" required value="<?php echo get_form_value('unit_no'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['unit_no']) ? 'input-error' : ''; ?>" id="unit_no" name="unit_no" required placeholder="Enter room/floor/unit number" value="<?php echo get_form_value('unit_no'); ?>">
                         </div>
                         <?php display_error('unit_no'); ?>
                     </div>
@@ -339,7 +317,7 @@ function calculate_age($date_of_birth) {
                         <label for="house_no">House/Lot & Blk. No</label>
                         <div class="input-group">
                             <i class="fas fa-home"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['house_no']) ? 'input-error' : ''; ?>" id="house_no" name="house_no" required value="<?php echo get_form_value('house_no'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['house_no']) ? 'input-error' : ''; ?>" id="house_no" name="house_no" required placeholder="Enter house/lot & block no." value="<?php echo get_form_value('house_no'); ?>">
                         </div>
                         <?php display_error('house_no'); ?>
                     </div>
@@ -348,7 +326,7 @@ function calculate_age($date_of_birth) {
                         <label for="street">Street Name</label>
                         <div class="input-group">
                             <i class="fas fa-road"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['street']) ? 'input-error' : ''; ?>" id="street" name="street" required value="<?php echo get_form_value('street'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['street']) ? 'input-error' : ''; ?>" id="street" name="street" required placeholder="Enter street name" value="<?php echo get_form_value('street'); ?>">
                         </div>
                         <?php display_error('street'); ?>
                     </div>
@@ -357,7 +335,7 @@ function calculate_age($date_of_birth) {
                         <label for="subdivision">Subdivision</label>
                         <div class="input-group">
                             <i class="fas fa-map-marked-alt"></i>
-                            <input type="text" class="form-control" id="subdivision" name="subdivision" value="<?php echo get_form_value('subdivision'); ?>">
+                            <input type="text" class="form-control" id="subdivision" name="subdivision" placeholder="Enter subdivision" value="<?php echo get_form_value('subdivision'); ?>">
                         </div>
                     </div>
 
@@ -365,7 +343,7 @@ function calculate_age($date_of_birth) {
                         <label for="barangay">Barangay/District/Locality</label>
                         <div class="input-group">
                             <i class="fas fa-map-marker-alt"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['barangay']) ? 'input-error' : ''; ?>" id="barangay" name="barangay" required value="<?php echo get_form_value('barangay'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['barangay']) ? 'input-error' : ''; ?>" id="barangay" name="barangay" required placeholder="Enter barangay" value="<?php echo get_form_value('barangay'); ?>">
                         </div>
                         <?php display_error('barangay'); ?>
                     </div>
@@ -374,7 +352,7 @@ function calculate_age($date_of_birth) {
                         <label for="city">City/Municipality</label>
                         <div class="input-group">
                             <i class="fas fa-city"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['city']) ? 'input-error' : ''; ?>" id="city" name="city" required value="<?php echo get_form_value('city'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['city']) ? 'input-error' : ''; ?>" id="city" name="city" required placeholder="Enter city/municipality" value="<?php echo get_form_value('city'); ?>">
                         </div>
                         <?php display_error('city'); ?>
                     </div>
@@ -383,7 +361,7 @@ function calculate_age($date_of_birth) {
                         <label for="province">Province</label>
                         <div class="input-group">
                             <i class="fas fa-map"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['province']) ? 'input-error' : ''; ?>" id="province" name="province" required value="<?php echo get_form_value('province'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['province']) ? 'input-error' : ''; ?>" id="province" name="province" required placeholder="Enter province" value="<?php echo get_form_value('province'); ?>">
                         </div>
                         <?php display_error('province'); ?>
                     </div>
@@ -408,7 +386,7 @@ function calculate_age($date_of_birth) {
                         <label for="zip_code">Zip Code</label>
                         <div class="input-group">
                             <i class="fas fa-mail-bulk"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['zip_code']) ? 'input-error' : ''; ?>" id="zip_code" name="zip_code" required pattern="[0-9]+" value="<?php echo get_form_value('zip_code'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['zip_code']) ? 'input-error' : ''; ?>" id="zip_code" name="zip_code" required pattern="[0-9]+" placeholder="Enter zip code" value="<?php echo get_form_value('zip_code'); ?>">
                         </div>
                         <?php display_error('zip_code'); ?>
                     </div>
@@ -423,8 +401,11 @@ function calculate_age($date_of_birth) {
                         <label for="tin">TIN Number</label>
                         <div class="input-group">
                             <i class="fas fa-id-card"></i>
-                            <input type="text" class="form-control" id="tin" name="tin" pattern="\d{9,12}" placeholder="XXX-XXX-XXX" value="<?php echo get_form_value('tin'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['tin']) ? 'is-invalid' : ''; ?>" id="tin" name="tin" pattern="\d{9,12}" placeholder="XXX-XXX-XXX" value="<?php echo get_form_value('tin'); ?>">
                         </div>
+                        <?php if (isset($errors['tin'])): ?>
+                            <div class="invalid-feedback"><?php echo $errors['tin']; ?></div>
+                        <?php endif; ?>
                         <div class="requirements">Format: 9-12 digits</div>
                     </div>
 
@@ -432,7 +413,7 @@ function calculate_age($date_of_birth) {
                         <label for="nationality">Nationality</label>
                         <div class="input-group">
                             <i class="fas fa-globe"></i>
-                            <input type="text" class="form-control" id="nationality" name="nationality" required pattern="[A-Za-z\s-]+" placeholder="Enter your nationality" value="<?php echo get_form_value('nationality'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['nationality']) ? 'input-error' : ''; ?>" id="nationality" name="nationality" pattern="^[A-Za-z\s-]+$" required placeholder="Enter your nationality" value="<?php echo get_form_value('nationality'); ?>">
                         </div>
                         <?php display_error('nationality'); ?>
                     </div>
@@ -450,28 +431,28 @@ function calculate_age($date_of_birth) {
                     </div>
 
                     <div class="form-group">
-                        <label for="father_last_name">Last Name</label>
+                        <label for="father_last_name">Father's Last Name</label>
                         <div class="input-group">
                             <i class="fas fa-male"></i>
-                            <input type="text" class="form-control" id="father_last_name" name="father_last_name" pattern="[A-Za-z\s-]+" placeholder="Father's Last Name" value="<?php echo get_form_value('father_last_name'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['father_last_name']) ? 'input-error' : ''; ?>" id="father_last_name" name="father_last_name" pattern="^[A-Za-z\s-]+$" placeholder="Enter father's last name" value="<?php echo get_form_value('father_last_name'); ?>">
                         </div>
                         <?php display_error('father_last_name'); ?>
                     </div>
 
                     <div class="form-group">
-                        <label for="father_first_name">First Name</label>
+                        <label for="father_first_name">Father's First Name</label>
                         <div class="input-group">
                             <i class="fas fa-male"></i>
-                            <input type="text" class="form-control" id="father_first_name" name="father_first_name" pattern="[A-Za-z\s-]+" placeholder="Father's First Name" value="<?php echo get_form_value('father_first_name'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['father_first_name']) ? 'input-error' : ''; ?>" id="father_first_name" name="father_first_name" pattern="^[A-Za-z\s-]+$" placeholder="Enter father's first name" value="<?php echo get_form_value('father_first_name'); ?>">
                         </div>
                         <?php display_error('father_first_name'); ?>
                     </div>
 
                     <div class="form-group">
-                        <label for="father_middle_name">Middle Name</label>
+                        <label for="father_middle_name">Father's Middle Name</label>
                         <div class="input-group">
                             <i class="fas fa-male"></i>
-                            <input type="text" class="form-control" id="father_middle_name" name="father_middle_name" pattern="[A-Za-z\s-]+" placeholder="Father's Middle Name" value="<?php echo get_form_value('father_middle_name'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['father_middle_name']) ? 'input-error' : ''; ?>" id="father_middle_name" name="father_middle_name" pattern="^[A-Za-z\s-]+$" placeholder="Enter father's middle name" value="<?php echo get_form_value('father_middle_name'); ?>">
                         </div>
                         <?php display_error('father_middle_name'); ?>
                     </div>
@@ -481,28 +462,28 @@ function calculate_age($date_of_birth) {
                     </div>
 
                     <div class="form-group">
-                        <label for="mother_last_name">Last Name</label>
+                        <label for="mother_last_name">Mother's Last Name</label>
                         <div class="input-group">
                             <i class="fas fa-female"></i>
-                            <input type="text" class="form-control" id="mother_last_name" name="mother_last_name" pattern="[A-Za-z\s-]+" placeholder="Mother's Last Name" value="<?php echo get_form_value('mother_last_name'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['mother_last_name']) ? 'input-error' : ''; ?>" id="mother_last_name" name="mother_last_name" pattern="^[A-Za-z\s-]+$" placeholder="Enter mother's last name" value="<?php echo get_form_value('mother_last_name'); ?>">
                         </div>
                         <?php display_error('mother_last_name'); ?>
                     </div>
 
                     <div class="form-group">
-                        <label for="mother_first_name">First Name</label>
+                        <label for="mother_first_name">Mother's First Name</label>
                         <div class="input-group">
                             <i class="fas fa-female"></i>
-                            <input type="text" class="form-control" id="mother_first_name" name="mother_first_name" pattern="[A-Za-z\s-]+" placeholder="Mother's First Name" value="<?php echo get_form_value('mother_first_name'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['mother_first_name']) ? 'input-error' : ''; ?>" id="mother_first_name" name="mother_first_name" pattern="^[A-Za-z\s-]+$" placeholder="Enter mother's first name" value="<?php echo get_form_value('mother_first_name'); ?>">
                         </div>
                         <?php display_error('mother_first_name'); ?>
                     </div>
 
                     <div class="form-group">
-                        <label for="mother_middle_name">Middle Name</label>
+                        <label for="mother_middle_name">Mother's Middle Name</label>
                         <div class="input-group">
                             <i class="fas fa-female"></i>
-                            <input type="text" class="form-control" id="mother_middle_name" name="mother_middle_name" pattern="[A-Za-z\s-]+" placeholder="Mother's Middle Name" value="<?php echo get_form_value('mother_middle_name'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['mother_middle_name']) ? 'input-error' : ''; ?>" id="mother_middle_name" name="mother_middle_name" pattern="^[A-Za-z\s-]+$" placeholder="Enter mother's middle name" value="<?php echo get_form_value('mother_middle_name'); ?>">
                         </div>
                         <?php display_error('mother_middle_name'); ?>
                     </div>
@@ -518,42 +499,6 @@ function calculate_age($date_of_birth) {
         </div>
     </form>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle civil status others visibility
-    const civilStatus = document.getElementById('civil_status');
-    const othersContainer = document.getElementById('others_container');
-    
-    if (civilStatus && othersContainer) {
-        civilStatus.addEventListener('change', function() {
-            othersContainer.style.display = this.value === 'others' ? 'block' : 'none';
-        });
-    }
-
-    // Display age if date of birth is set
-    const dobInput = document.getElementById('date_of_birth');
-    const ageDisplay = document.getElementById('age_display');
-    
-    if (dobInput && ageDisplay) {
-        dobInput.addEventListener('change', function() {
-            if (this.value) {
-                const dob = new Date(this.value);
-                const today = new Date('2025-02-13');
-                let age = today.getFullYear() - dob.getFullYear();
-                const monthDiff = today.getMonth() - dob.getMonth();
-                
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-                    age--;
-                }
-                
-                ageDisplay.textContent = `Age: ${age} years old`;
-            } else {
-                ageDisplay.textContent = '';
-            }
-        });
-    }
-});
-</script>
+<script src="script.js"></script>
 </body>
 </html>
