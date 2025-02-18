@@ -160,8 +160,14 @@ body {
     outline: none;
 }
 
-.form-control.error {
+.form-control.input-error {
     border-color: var(--error-color);
+    background-color: rgba(239, 68, 68, 0.05);
+}
+
+.form-control.input-error:focus {
+    border-color: var(--error-color);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 /* Radio Group Styles */

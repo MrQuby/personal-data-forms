@@ -401,7 +401,7 @@ function calculate_age($date_of_birth) {
                         <label for="tin">TIN Number</label>
                         <div class="input-group">
                             <i class="fas fa-id-card"></i>
-                            <input type="text" class="form-control <?php echo isset($errors['tin']) ? 'is-invalid' : ''; ?>" id="tin" name="tin" pattern="\d{9,12}" placeholder="XXX-XXX-XXX" value="<?php echo get_form_value('tin'); ?>">
+                            <input type="text" class="form-control <?php echo isset($errors['tin']) ? 'input-error' : ''; ?>" id="tin" name="tin" pattern="\d{9,12}" placeholder="XXX-XXX-XXX" value="<?php echo get_form_value('tin'); ?>">
                         </div>
                         <?php if (isset($errors['tin'])): ?>
                             <div class="invalid-feedback"><?php echo $errors['tin']; ?></div>
