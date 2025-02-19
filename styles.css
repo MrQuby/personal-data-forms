@@ -260,30 +260,52 @@ select.form-control {
     padding: 10px;
 }
 
-/* Submit Section Styles */
+/* Submit and Cancel Button Styles */
 .submit-section {
-    text-align: center;
-    padding: 2rem;
-    background: var(--bg-color);
-    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn-submit,
+.btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
 }
 
 .btn-submit {
     background: var(--primary-color);
     color: white;
-    padding: 1rem 2.5rem;
     border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1);
 }
 
 .btn-submit:hover {
     background: var(--primary-hover);
-    transform: translateY(-1px);
+}
+
+.btn-cancel {
+    background: #ef4444;
+    color: white;
+    border: none;
+}
+
+.btn-cancel:hover {
+    background: #dc2626;
+}
+
+.btn-submit i,
+.btn-cancel i {
+    font-size: 1.1rem;
 }
 
 /* Helper Classes */

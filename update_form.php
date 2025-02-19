@@ -1,7 +1,10 @@
 <?php
 session_start();
+require_once 'config.php';
 
-// Function to sanitize input
+// Import all the validation functions from process_form.php
+
+// function to sanitize input
 function sanitize_input($data) {
     $data = trim($data);
     $data = stripslashes($data);
@@ -57,8 +60,15 @@ function validate_tin($tin) {
     return preg_match("/^\d{9,12}$/", trim($tin));
 }
 
-// Check if form was submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+    
+    if ($id <= 0) {
+        $_SESSION['error'] = "Invalid record ID";
+        header("Location: index.php");
+        exit();
+    }
+
     $errors = [];
     
     // Store all POST data in session
@@ -243,7 +253,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // If there are errors, store them in session and redirect back
     if (!empty($errors)) {
         $_SESSION['errors'] = $errors;
-        header("Location: add.php");
+        header("Location: edit.php?id=" . $id);
         exit();
     }
 
@@ -336,50 +346,50 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Format the full name of the person
     $full_name = format_name($last_name, $first_name, $middle_initial);
-    
-    // Insert data into database
-    if (empty($errors)) {
-        require_once 'config.php';
-        
-        try {
-            // Store all values in variables before binding
-            $father_last_name_val = $father_last_name ?? '';
-            $father_first_name_val = $father_first_name ?? '';
-            $father_middle_name_val = $father_middle_name ?? '';
-            $mother_last_name_val = $mother_last_name ?? '';
-            $mother_first_name_val = $mother_first_name ?? '';
-            $mother_middle_name_val = $mother_middle_name ?? '';
-            $religion_val = $religion ?? '';
-            $telephone_number_val = $telephone_number ?? '';
-            $email_val = $email ?? '';
-            $tin_val = $tin ?? '';
-            $pob_unit_no_val = $pob_unit_no ?? '';
-            $pob_street_val = $pob_street ?? '';
-            $unit_no_val = $unit_no ?? '';
-            $house_no_val = $house_no ?? '';
-            $street_val = $street ?? '';
 
-            $sql = "INSERT INTO personal_data (
-                last_name, first_name, middle_initial, date_of_birth, sex, civil_status, 
-                nationality, religion,
-                pob_unit_no, pob_street, pob_barangay, pob_city, pob_province, pob_country, pob_zip_code,
-                unit_no, house_no, street, barangay, city, province, country, zip_code,
-                mobile_number, telephone_number, email, tin,
-                father_last_name, father_first_name, father_middle_name,
-                mother_last_name, mother_first_name, mother_middle_name
-            ) VALUES (
-                :last_name, :first_name, :middle_initial, :date_of_birth, :sex, :civil_status,
-                :nationality, :religion,
-                :pob_unit_no, :pob_street, :pob_barangay, :pob_city, :pob_province, :pob_country, :pob_zip_code,
-                :unit_no, :house_no, :street, :barangay, :city, :province, :country, :zip_code,
-                :mobile_number, :telephone_number, :email, :tin,
-                :father_last_name, :father_first_name, :father_middle_name,
-                :mother_last_name, :mother_first_name, :mother_middle_name
-            )";
+    if (empty($errors)) {
+        try {
+            // Prepare the SQL UPDATE statement
+            $sql = "UPDATE personal_data SET 
+                last_name = :last_name,
+                first_name = :first_name,
+                middle_initial = :middle_initial,
+                date_of_birth = :date_of_birth,
+                sex = :sex,
+                civil_status = :civil_status,
+                nationality = :nationality,
+                religion = :religion,
+                pob_unit_no = :pob_unit_no,
+                pob_street = :pob_street,
+                pob_barangay = :pob_barangay,
+                pob_city = :pob_city,
+                pob_province = :pob_province,
+                pob_country = :pob_country,
+                pob_zip_code = :pob_zip_code,
+                unit_no = :unit_no,
+                house_no = :house_no,
+                street = :street,
+                barangay = :barangay,
+                city = :city,
+                province = :province,
+                country = :country,
+                zip_code = :zip_code,
+                mobile_number = :mobile_number,
+                telephone_number = :telephone_number,
+                email = :email,
+                tin = :tin,
+                father_last_name = :father_last_name,
+                father_first_name = :father_first_name,
+                father_middle_name = :father_middle_name,
+                mother_last_name = :mother_last_name,
+                mother_first_name = :mother_first_name,
+                mother_middle_name = :mother_middle_name
+                WHERE id = :id";
 
             $stmt = $conn->prepare($sql);
             
             // Bind all parameters
+            $stmt->bindParam(':id', $id);
             $stmt->bindParam(':last_name', $last_name);
             $stmt->bindParam(':first_name', $first_name);
             $stmt->bindParam(':middle_initial', $middle_initial);
@@ -387,11 +397,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bindParam(':sex', $sex);
             $stmt->bindParam(':civil_status', $civil_status);
             $stmt->bindParam(':nationality', $nationality);
-            $stmt->bindParam(':religion', $religion_val);
+            $stmt->bindParam(':religion', $religion);
             
             // Place of Birth
-            $stmt->bindParam(':pob_unit_no', $pob_unit_no_val);
-            $stmt->bindParam(':pob_street', $pob_street_val);
+            $stmt->bindParam(':pob_unit_no', $pob_unit_no);
+            $stmt->bindParam(':pob_street', $pob_street);
             $stmt->bindParam(':pob_barangay', $pob_barangay);
             $stmt->bindParam(':pob_city', $pob_city);
             $stmt->bindParam(':pob_province', $pob_province);
@@ -399,49 +409,52 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bindParam(':pob_zip_code', $pob_zip_code);
             
             // Home Address
-            $stmt->bindParam(':unit_no', $unit_no_val);
-            $stmt->bindParam(':house_no', $house_no_val);
-            $stmt->bindParam(':street', $street_val);
+            $stmt->bindParam(':unit_no', $unit_no);
+            $stmt->bindParam(':house_no', $house_no);
+            $stmt->bindParam(':street', $street);
             $stmt->bindParam(':barangay', $barangay);
             $stmt->bindParam(':city', $city);
             $stmt->bindParam(':province', $province);
             $stmt->bindParam(':country', $country);
             $stmt->bindParam(':zip_code', $zip_code);
-            
+
             // Contact Information
             $stmt->bindParam(':mobile_number', $mobile_number);
-            $stmt->bindParam(':telephone_number', $telephone_number_val);
-            $stmt->bindParam(':email', $email_val);
+            $stmt->bindParam(':telephone_number', $telephone_number);
+            $stmt->bindParam(':email', $email);
             
             // Government IDs
-            $stmt->bindParam(':tin', $tin_val);
+            $stmt->bindParam(':tin', $tin);
             
             // Parent Information
-            $stmt->bindParam(':father_last_name', $father_last_name_val);
-            $stmt->bindParam(':father_first_name', $father_first_name_val);
-            $stmt->bindParam(':father_middle_name', $father_middle_name_val);
-            $stmt->bindParam(':mother_last_name', $mother_last_name_val);
-            $stmt->bindParam(':mother_first_name', $mother_first_name_val);
-            $stmt->bindParam(':mother_middle_name', $mother_middle_name_val);
+            $stmt->bindParam(':father_last_name', $father_last_name);
+            $stmt->bindParam(':father_first_name', $father_first_name);
+            $stmt->bindParam(':father_middle_name', $father_middle_name);
+            $stmt->bindParam(':mother_last_name', $mother_last_name);
+            $stmt->bindParam(':mother_first_name', $mother_first_name);
+            $stmt->bindParam(':mother_middle_name', $mother_middle_name);
             
             $stmt->execute();
-            $newId = $conn->lastInsertId();
             
-            // Store success message in session
-            $_SESSION['success_message'] = "Record added successfully!";
+            // Set success message
+            $_SESSION['success_message'] = "Record updated successfully!";
             
-            // Clear the form data from session
+            // Clear form data from session
             unset($_SESSION['form_data']);
             
-            // Redirect to index.php
+            // Redirect to index page
             header("Location: index.php");
             exit();
             
-        } catch(PDOException $e) {
-            $_SESSION['error'] = "Error saving record: " . $e->getMessage();
-            header("Location: add.php");
+        } catch (PDOException $e) {
+            $_SESSION['error'] = "Error updating record: " . $e->getMessage();
+            header("Location: edit.php?id=" . $id);
             exit();
         }
+    } else {
+        $_SESSION['errors'] = $errors;
+        header("Location: edit.php?id=" . $id);
+        exit();
     }
 } else {
     // Redirect if accessed directly without form submission
